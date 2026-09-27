@@ -4,6 +4,13 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  --font-serif: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+
 /*
  * Design system definition.
  *
