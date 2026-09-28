@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AskRouteImport } from './routes/ask'
 import { Route as CorpusRouteImport } from './routes/corpus'
 import { Route as NetworkRouteImport } from './routes/network'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AskRoute = AskRouteImport.update({
+  id: '/ask',
+  path: '/ask',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CorpusRoute = CorpusRouteImport.update({
@@ -31,30 +37,34 @@ const NetworkRoute = NetworkRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ask': typeof AskRoute
   '/corpus': typeof CorpusRoute
   '/network': typeof NetworkRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ask': typeof AskRoute
   '/corpus': typeof CorpusRoute
   '/network': typeof NetworkRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/ask': typeof AskRoute
   '/corpus': typeof CorpusRoute
   '/network': typeof NetworkRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/corpus' | '/network'
+  fullPaths: '/' | '/ask' | '/corpus' | '/network'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/corpus' | '/network'
-  id: '__root__' | '/' | '/corpus' | '/network'
+  to: '/' | '/ask' | '/corpus' | '/network'
+  id: '__root__' | '/' | '/ask' | '/corpus' | '/network'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AskRoute: typeof AskRoute
   CorpusRoute: typeof CorpusRoute
   NetworkRoute: typeof NetworkRoute
 }
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ask': {
+      id: '/ask'
+      path: '/ask'
+      fullPath: '/ask'
+      preLoaderRoute: typeof AskRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/corpus': {
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AskRoute: AskRoute,
   CorpusRoute: CorpusRoute,
   NetworkRoute: NetworkRoute,
 }
