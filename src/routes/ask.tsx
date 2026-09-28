@@ -1,0 +1,190 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
+
+import { Panel, Shell, SentimentPill } from "@/components/shell";
+import { retrieve, type Retrieved } from "@/lib/enrichment";
+import { askKnowledgeBase } from "@/lib/rag.functions";
+
+export const Route = createFileRoute("/ask")({
+  head: () => ({
+    meta: [
+      { title: "Generative Query Interface | Metadata Extractor" },
+      {
+        name: "description",
+        content:
+          "Ask natural-language questions of the enriched Instagram metadata corpus and receive cited, synthesised answers through retrieval-augmented generation.",
+      },
+      { property: "og:title", content: "Generative Query Interface (RAG)" },
+      {
+        property: "og:description",
+        content: "Retrieval-augmented synthesis of social network metadata for decision support.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: Ask,
+});
+
+const SUGGESTIONS = [
+  "What are the main concerns about renewable energy discussed in this dataset?",
+  "Which accounts drive the food security conversation, and what evidence do they present?",
+  "Summarise the metering and tariff complaints for a policy decision maker.",
+  "What does the corpus suggest about the link between energy access and health outcomes?",
+];
+
+function Ask() {
+  const ask = useServerFn(askKnowledgeBase);
+  const [question, setQuestion] = useState("");
+  const [mode, setMode] = useState<"answer" | "brief">("answer");
+  const [retrieved, setRetrieved] = useState<Retrieved[]>([]);
+  const [answer, setAnswer] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function run(q: string) {
+    const trimmed = q.trim();
+    if (trimmed.length < 3 || loading) return;
+    setLoading(true);
+    setError("");
+    setAnswer("");
+    const hits = retrieve(trimmed, 6);
+    setRetrieved(hits);
+    try {
+      const result = await ask({
+        data: {
+          question: trimmed,
+          mode,
+          chunks: hits.map((h) => ({ id: h.post.id, text: h.post.chunk })),
+        },
+      });
+      if (result.ok) setAnswer(result.answer);
+      else setError(result.error);
+    } catch {
+      setError("The request could not be completed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Shell
+      title="Generative query interface"
+      subtitle="Semantic retrieval over the vector index, boosted with graph context, then synthesised by a language model with citations back to each source record."
+    >
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void run(question);
+        }}
+        className="paper-panel p-5"
+      >
+        <label className="label-caps" htmlFor="q">
+          Natural language question
+        </label>
+        <textarea
+          id="q"
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          rows={3}
+          placeholder="e.g. What are the main concerns about renewable energy discussed by influencers in this dataset?"
+          className="mt-2 w-full resize-y rounded-sm border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring"
+        />
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <select
+            value={mode}
+            onChange={(e) => setMode(e.target.value as "answer" | "brief")}
+            className="rounded-sm border border-input bg-card px-3 py-2 text-sm outline-none focus:border-ring"
+          >
+            <option value="answer">Cited answer</option>
+            <option value="brief">Structured decision brief</option>
+          </select>
+          <button
+            type="submit"
+            disabled={loading || question.trim().length < 3}
+            className="rounded-sm bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+          >
+            {loading ? "Synthesising…" : "Retrieve and synthesise"}
+          </button>
+          <span className="label-caps">Retrieval k = 6</span>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {SUGGESTIONS.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => {
+                setQuestion(s);
+                void run(s);
+              }}
+              className="rounded-sm border border-border bg-secondary px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      </form>
+
+      <div className="mt-5 grid gap-5 lg:grid-cols-[1.25fr_1fr]">
+        <Panel title="Synthesised knowledge" hint="Generative layer">
+          {error && <p className="text-sm text-negative">{error}</p>}
+          {loading && !answer && (
+            <p className="text-sm text-muted-foreground">
+              Retrieving the nearest metadata records and generating a cited synthesis…
+            </p>
+          )}
+          {!loading && !answer && !error && (
+            <p className="text-sm text-muted-foreground">
+              Ask a question to generate an answer grounded in the retrieved metadata records. Every
+              claim is cited with its post identifier.
+            </p>
+          )}
+          {answer && (
+            <div className="space-y-3 text-sm leading-relaxed text-foreground">
+              {answer.split("\n").filter(Boolean).map((line, i) =>
+                line.startsWith("##") ? (
+                  <h4 key={i} className="pt-2 font-serif text-base font-semibold">
+                    {line.replace(/^#+\s*/, "")}
+                  </h4>
+                ) : (
+                  <p key={i}>{line.replace(/^[-*]\s*/, "• ")}</p>
+                ),
+              )}
+            </div>
+          )}
+        </Panel>
+
+        <Panel title="Retrieved evidence" hint="Vector + graph retrieval">
+          {retrieved.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Retrieved records and their similarity scores will appear here.
+            </p>
+          ) : (
+            <ol className="space-y-3">
+              {retrieved.map((r) => (
+                <li key={r.post.id} className="border-b border-rule/60 pb-3 last:border-0">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="font-mono text-xs text-foreground">
+                      [{r.post.id}] {r.post.author}
+                    </span>
+                    <span className="font-mono text-[11px] text-muted-foreground">
+                      score {r.score.toFixed(3)} · graph +{r.graphBoost.toFixed(3)}
+                    </span>
+                  </div>
+                  <p className="mt-1 line-clamp-3 text-sm text-muted-foreground">
+                    {r.post.caption}
+                  </p>
+                  <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
+                    <span>{r.post.topic.label}</span>
+                    <SentimentPill value={r.post.sentiment} />
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )}
+        </Panel>
+      </div>
+    </Shell>
+  );
+}
