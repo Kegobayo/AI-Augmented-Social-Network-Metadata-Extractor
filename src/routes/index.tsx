@@ -13,6 +13,7 @@ import {
 } from "recharts";
 
 import { Panel, Shell, Stat, SentimentPill } from "@/components/shell";
+import { InstagramInsights } from "@/components/instagram-insights";
 import {
   AUTHORS,
   CORPUS_STATS,
@@ -70,6 +71,8 @@ function Dashboard() {
           label="Interactions"
         />
       </div>
+
+      <InstagramInsights />
 
       <div className="mt-6 grid gap-5 lg:grid-cols-2">
         <Panel title="Topic distribution" hint="BERTopic surrogate">

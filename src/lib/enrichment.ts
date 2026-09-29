@@ -498,3 +498,18 @@ export function entityFrequency(limit = 14) {
   }
   return [...map.values()].sort((a, b) => b.count - a.count).slice(0, limit);
 }
+
+/** Enrich an arbitrary external caption (e.g. a pasted Instagram post). */
+export function analyzeText(text: string, hashtags: string[] = []) {
+  const tokens = tokenize(`${text} ${hashtags.join(" ")}`);
+  const { topic, confidence } = classifyTopic(tokens, hashtags);
+  const s = scoreSentiment(text);
+  return {
+    topic: topic.label,
+    topicConfidence: Number(confidence.toFixed(2)),
+    sentiment: s.polarity,
+    sentimentLabel: s.label,
+    emotion: s.emotion,
+    entities: extractEntities(text),
+  };
+}
