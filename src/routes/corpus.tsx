@@ -28,7 +28,7 @@ export const Route = createFileRoute("/corpus")({
 function Corpus() {
   const [query, setQuery] = useState("");
   const [topicId, setTopicId] = useState("all");
-  const [selectedId, setSelectedId] = useState(ENRICHED[0].id);
+  const [selectedId, setSelectedId] = useState(ENRICHED[0]!.id);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -44,7 +44,7 @@ function Corpus() {
     });
   }, [query, topicId]);
 
-  const selected = ENRICHED.find((p) => p.id === selectedId) ?? filtered[0] ?? ENRICHED[0];
+  const selected = ENRICHED.find((p) => p.id === selectedId) ?? filtered[0] ?? ENRICHED[0]!;
 
   return (
     <Shell

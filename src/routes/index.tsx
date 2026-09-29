@@ -198,7 +198,7 @@ function Dashboard() {
                 <span className="w-40 font-mono text-foreground">{h.tag}</span>
                 <span
                   className="h-2 rounded-[2px] bg-chart-2"
-                  style={{ width: `${(h.count / HASHTAG_STATS[0].count) * 55}%` }}
+                  style={{ width: `${(h.count / HASHTAG_STATS[0]!.count) * 55}%` }}
                 />
                 <span className="font-mono text-muted-foreground">{h.count}</span>
               </div>

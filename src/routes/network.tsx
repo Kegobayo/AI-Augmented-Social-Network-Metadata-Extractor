@@ -30,9 +30,9 @@ const COMMUNITY_COLORS: Record<string, string> = {};
 function colorFor(community: string) {
   if (!COMMUNITY_COLORS[community]) {
     const palette = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
-    COMMUNITY_COLORS[community] = palette[Object.keys(COMMUNITY_COLORS).length % palette.length];
+    COMMUNITY_COLORS[community] = palette[Object.keys(COMMUNITY_COLORS).length % palette.length]!;
   }
-  return COMMUNITY_COLORS[community];
+  return COMMUNITY_COLORS[community]!;
 }
 
 function Network() {
@@ -185,7 +185,7 @@ function Network() {
                   <td className="py-2">
                     <span
                       className="inline-block h-2 rounded-[2px] bg-chart-3"
-                      style={{ width: `${(e.weight / CO_OCCURRENCE[0].weight) * 90}px` }}
+                      style={{ width: `${(e.weight / CO_OCCURRENCE[0]!.weight) * 90}px` }}
                     />
                   </td>
                 </tr>
@@ -201,7 +201,7 @@ function Network() {
                 <span className="w-44 font-mono text-foreground">{h.tag}</span>
                 <span
                   className="h-2.5 rounded-[2px] bg-chart-1"
-                  style={{ width: `${(h.reach / HASHTAG_STATS[0].reach) * 45 + 4}%` }}
+                  style={{ width: `${(h.reach / HASHTAG_STATS[0]!.reach) * 45 + 4}%` }}
                 />
                 <span className="font-mono text-muted-foreground">
                   {(h.reach / 1000).toFixed(1)}k

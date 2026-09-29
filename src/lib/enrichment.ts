@@ -148,7 +148,7 @@ export const TOPICS: Topic[] = [
 
 function classifyTopic(tokens: string[], hashtags: string[]) {
   const bag = [...tokens, ...hashtags.map((h) => h.replace("#", ""))];
-  let best = TOPICS[0];
+  let best = TOPICS[0]!;
   let bestScore = 0;
   for (const topic of TOPICS) {
     const score = bag.filter((t) => topic.keywords.includes(t)).length;
@@ -208,7 +208,7 @@ export function embed(text: string): number[] {
 
 export function cosine(a: number[], b: number[]): number {
   let s = 0;
-  for (let i = 0; i < a.length; i++) s += a[i] * b[i];
+  for (let i = 0; i < a.length; i++) s += a[i]! * b[i]!;
   return s;
 }
 
@@ -319,7 +319,7 @@ export const AUTHORS: AuthorNode[] = (() => {
     const followers = posts[0]?.followers ?? 1000;
     const totalEngagement = posts.reduce((s, p) => s + p.likes + p.comments + p.saves + p.shares, 0);
     const raw = labels.get(id)!;
-    if (!communityNames.has(raw)) communityNames.set(raw, names[idx++ % names.length]);
+    if (!communityNames.has(raw)) communityNames.set(raw, names[idx++ % names.length]!);
     const topicCounts = new Map<string, number>();
     for (const p of posts) topicCounts.set(p.topic.label, (topicCounts.get(p.topic.label) ?? 0) + 1);
     const dominantTopic = [...topicCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
@@ -372,7 +372,7 @@ export const CO_OCCURRENCE: CoOccurrence[] = (() => {
     for (let i = 0; i < tags.length; i++) {
       for (let j = i + 1; j < tags.length; j++) {
         const key = `${tags[i]}|${tags[j]}`;
-        const cur = map.get(key) ?? { a: tags[i], b: tags[j], weight: 0 };
+        const cur = map.get(key) ?? { a: tags[i]!, b: tags[j]!, weight: 0 };
         cur.weight++;
         map.set(key, cur);
       }
@@ -419,7 +419,7 @@ export const CORPUS_STATS = {
     (ENRICHED.reduce((s, p) => s + p.sentiment, 0) / ENRICHED.length).toFixed(3),
   ),
   span: {
-    from: ENRICHED.map((p) => p.timestamp).sort()[0].slice(0, 10),
+    from: ENRICHED.map((p) => p.timestamp).sort()[0]!.slice(0, 10),
     to: ENRICHED.map((p) => p.timestamp).sort().at(-1)!.slice(0, 10),
   },
 };
