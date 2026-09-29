@@ -389,22 +389,50 @@ export type Retrieved = { post: EnrichedPost; score: number; graphBoost: number 
  * Layer 3 retrieval: semantic similarity over the vector index, boosted by
  * graph context (author influence and hashtag overlap with the query).
  */
+const IDF: Map<string, number> = (() => {
+  const df = new Map<string, number>();
+  for (const p of ENRICHED) {
+    for (const t of new Set(p.tokens)) df.set(t, (df.get(t) ?? 0) + 1);
+  }
+  const idf = new Map<string, number>();
+  for (const [t, n] of df) idf.set(t, Math.log(1 + ENRICHED.length / n));
+  return idf;
+})();
+
+function tfidf(tokens: string[]) {
+  const vec = new Map<string, number>();
+  for (const t of tokens) vec.set(t, (vec.get(t) ?? 0) + (IDF.get(t) ?? Math.log(1 + ENRICHED.length)));
+  const norm = Math.hypot(...vec.values()) || 1;
+  for (const [t, v] of vec) vec.set(t, v / norm);
+  return vec;
+}
+
+const POST_VECTORS = new Map(ENRICHED.map((p) => [p.id, tfidf(p.tokens)]));
+
+function sparseCosine(a: Map<string, number>, b: Map<string, number>) {
+  let s = 0;
+  for (const [t, v] of a) s += v * (b.get(t) ?? 0);
+  return s;
+}
+
 export function retrieve(query: string, k = 6): Retrieved[] {
-  const q = embed(query);
-  const qTokens = new Set(tokenize(query));
+  const qTokens = tokenize(query);
+  const q = tfidf(qTokens);
+  const qSet = new Set(qTokens);
   const maxInfluence = Math.max(...AUTHORS.map((a) => a.influence));
   return ENRICHED.map((post) => {
-    const semantic = cosine(q, post.embedding);
-    const tagOverlap = post.hashtags.filter((h) => qTokens.has(h.replace("#", ""))).length;
+    const semantic = sparseCosine(q, POST_VECTORS.get(post.id)!);
+    const tagOverlap = post.hashtags.filter((h) => qSet.has(h.replace("#", ""))).length;
     const author = AUTHORS.find((a) => a.id === post.author);
     const graphBoost = Number(
-      ((author ? author.influence / maxInfluence : 0) * 0.06 + tagOverlap * 0.05).toFixed(4),
+      ((author ? author.influence / maxInfluence : 0) * 0.04 + tagOverlap * 0.05).toFixed(4),
     );
     return { post, score: Number((semantic + graphBoost).toFixed(4)), graphBoost };
   })
     .sort((a, b) => b.score - a.score)
     .slice(0, k);
 }
+
 
 /* --------------------------------------------------------- corpus summary */
 
