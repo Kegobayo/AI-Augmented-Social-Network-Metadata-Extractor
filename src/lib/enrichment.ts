@@ -260,10 +260,6 @@ function enrich(post: RawPost): EnrichedPost {
   };
 }
 
-export const ENRICHED: EnrichedPost[] = RAW_POSTS.map(enrich);
-
-/* ------------------------------------------------------- network analysis */
-
 export type AuthorNode = {
   id: string;
   category: RawPost["authorCategory"];
@@ -276,78 +272,6 @@ export type AuthorNode = {
   avgSentiment: number;
   dominantTopic: string;
 };
-
-function labelPropagation(nodes: string[], edges: [string, string][]) {
-  const labels = new Map(nodes.map((n) => [n, n]));
-  const neighbours = new Map<string, string[]>(nodes.map((n) => [n, []]));
-  for (const [a, b] of edges) {
-    neighbours.get(a)?.push(b);
-    neighbours.get(b)?.push(a);
-  }
-  for (let iter = 0; iter < 12; iter++) {
-    for (const n of nodes) {
-      const counts = new Map<string, number>();
-      for (const nb of neighbours.get(n) ?? []) {
-        const l = labels.get(nb)!;
-        counts.set(l, (counts.get(l) ?? 0) + 1);
-      }
-      let bestLabel = labels.get(n)!;
-      let bestCount = 0;
-      for (const [l, c] of [...counts.entries()].sort((x, y) => x[0].localeCompare(y[0]))) {
-        if (c > bestCount) {
-          bestCount = c;
-          bestLabel = l;
-        }
-      }
-      labels.set(n, bestLabel);
-    }
-  }
-  return labels;
-}
-
-export const AUTHORS: AuthorNode[] = (() => {
-  const ids = [...new Set([...ENRICHED.map((p) => p.author), ...FOLLOW_EDGES.flat()])].sort();
-  const labels = labelPropagation(ids, FOLLOW_EDGES);
-  const communityNames = new Map<string, string>();
-  let idx = 0;
-  const names = ["Energy transition cluster", "Knowledge & education cluster", "Livelihood & health cluster", "Peripheral cluster"];
-
-  return ids.map((id) => {
-    const posts = ENRICHED.filter((p) => p.author === id);
-    const inDegree = FOLLOW_EDGES.filter(([, b]) => b === id).length;
-    const outDegree = FOLLOW_EDGES.filter(([a]) => a === id).length;
-    const followers = posts[0]?.followers ?? 1000;
-    const totalEngagement = posts.reduce((s, p) => s + p.likes + p.comments + p.saves + p.shares, 0);
-    const raw = labels.get(id)!;
-    if (!communityNames.has(raw)) communityNames.set(raw, names[idx++ % names.length]!);
-    const topicCounts = new Map<string, number>();
-    for (const p of posts) topicCounts.set(p.topic.label, (topicCounts.get(p.topic.label) ?? 0) + 1);
-    const dominantTopic = [...topicCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
-    return {
-      id,
-      category: posts[0]?.authorCategory ?? "citizen",
-      followers,
-      posts: posts.length,
-      inDegree,
-      outDegree,
-      influence: Number(
-        (
-          inDegree * 8 +
-          Math.log10(followers + 1) * 6 +
-          Math.log10(totalEngagement + 1) * 5
-        ).toFixed(1),
-      ),
-      community: communityNames.get(raw)!,
-      avgSentiment: posts.length
-        ? Number((posts.reduce((s, p) => s + p.sentiment, 0) / posts.length).toFixed(3))
-        : 0,
-      dominantTopic,
-    };
-  });
-})();
-
-/* ------------------------------------------------- hashtag co-occurrence */
-
 export type HashtagStat = { tag: string; count: number; reach: number };
 
 export const HASHTAG_STATS: HashtagStat[] = (() => {
@@ -452,52 +376,153 @@ export const CORPUS_STATS = {
   },
 };
 
-export function topicDistribution() {
-  return TOPICS.map((t) => {
-    const posts = ENRICHED.filter((p) => p.topic.id === t.id);
-    return {
-      id: t.id,
-      label: t.label,
-      short: t.label.split(" ")[0],
-      count: posts.length,
-      colorVar: t.colorVar,
-      sentiment: posts.length
-        ? Number((posts.reduce((s, p) => s + p.sentiment, 0) / posts.length).toFixed(3))
-        : 0,
-      engagement: posts.reduce((s, p) => s + p.likes + p.comments + p.saves + p.shares, 0),
-    };
-  });
-}
-
-export function sentimentTimeline() {
-  const byWeek = new Map<string, { week: string; sentiment: number; n: number; posts: number }>();
-  for (const p of [...ENRICHED].sort((a, b) => a.timestamp.localeCompare(b.timestamp))) {
-    const d = new Date(p.timestamp);
-    const week = `${d.toLocaleString("en", { month: "short" })} ${String(d.getDate()).padStart(2, "0")}`;
-    const cur = byWeek.get(week) ?? { week, sentiment: 0, n: 0, posts: 0 };
-    cur.sentiment += p.sentiment;
-    cur.n++;
-    cur.posts++;
-    byWeek.set(week, cur);
+function labelPropagation(nodes: string[], edges: [string, string][]) {
+  const labels = new Map(nodes.map((n) => [n, n]));
+  const neighbours = new Map<string, string[]>(nodes.map((n) => [n, []]));
+  for (const [a, b] of edges) {
+    neighbours.get(a)?.push(b);
+    neighbours.get(b)?.push(a);
   }
-  return [...byWeek.values()].map((v) => ({
-    week: v.week,
-    sentiment: Number((v.sentiment / v.n).toFixed(3)),
-    posts: v.posts,
-  }));
-}
-
-export function entityFrequency(limit = 14) {
-  const map = new Map<string, { text: string; type: EntityType; count: number }>();
-  for (const p of ENRICHED) {
-    for (const e of p.entities) {
-      const cur = map.get(e.text) ?? { text: e.text, type: e.type, count: 0 };
-      cur.count++;
-      map.set(e.text, cur);
+  for (let iter = 0; iter < 12; iter++) {
+    for (const n of nodes) {
+      const counts = new Map<string, number>();
+      for (const nb of neighbours.get(n) ?? []) {
+        const l = labels.get(nb)!;
+        counts.set(l, (counts.get(l) ?? 0) + 1);
+      }
+      let bestLabel = labels.get(n)!;
+      let bestCount = 0;
+      for (const [l, c] of [...counts.entries()].sort((x, y) => x[0].localeCompare(y[0]))) {
+        if (c > bestCount) {
+          bestCount = c;
+          bestLabel = l;
+        }
+      }
+      labels.set(n, bestLabel);
     }
   }
-  return [...map.values()].sort((a, b) => b.count - a.count).slice(0, limit);
+  return labels;
 }
+
+export type Corpus = ReturnType<typeof buildCorpus>;
+
+export function buildCorpus(raw: RawPost[], edges: [string, string][], isDemo = false) {
+  const ENRICHED: EnrichedPost[] = raw.map(enrich);
+
+  /* ------------------------------------------------------- network analysis */
+
+
+
+  const AUTHORS: AuthorNode[] = (() => {
+    const ids = [...new Set([...ENRICHED.map((p) => p.author), ...edges.flat()])].sort();
+    const labels = labelPropagation(ids, edges);
+    const communityNames = new Map<string, string>();
+    let idx = 0;
+    const names = ["Energy transition cluster", "Knowledge & education cluster", "Livelihood & health cluster", "Peripheral cluster"];
+
+    return ids.map((id) => {
+      const posts = ENRICHED.filter((p) => p.author === id);
+      const inDegree = edges.filter(([, b]) => b === id).length;
+      const outDegree = edges.filter(([a]) => a === id).length;
+      const followers = posts[0]?.followers ?? 1000;
+      const totalEngagement = posts.reduce((s, p) => s + p.likes + p.comments + p.saves + p.shares, 0);
+      const raw = labels.get(id)!;
+      if (!communityNames.has(raw)) communityNames.set(raw, names[idx++ % names.length]!);
+      const topicCounts = new Map<string, number>();
+      for (const p of posts) topicCounts.set(p.topic.label, (topicCounts.get(p.topic.label) ?? 0) + 1);
+      const dominantTopic = [...topicCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
+      return {
+        id,
+        category: posts[0]?.authorCategory ?? "citizen",
+        followers,
+        posts: posts.length,
+        inDegree,
+        outDegree,
+        influence: Number(
+          (
+            inDegree * 8 +
+            Math.log10(followers + 1) * 6 +
+            Math.log10(totalEngagement + 1) * 5
+          ).toFixed(1),
+        ),
+        community: communityNames.get(raw)!,
+        avgSentiment: posts.length
+          ? Number((posts.reduce((s, p) => s + p.sentiment, 0) / posts.length).toFixed(3))
+          : 0,
+        dominantTopic,
+      };
+    });
+  })();
+
+  /* ------------------------------------------------- hashtag co-occurrence */
+
+
+  function topicDistribution() {
+    return TOPICS.map((t) => {
+      const posts = ENRICHED.filter((p) => p.topic.id === t.id);
+      return {
+        id: t.id,
+        label: t.label,
+        short: t.label.split(" ")[0],
+        count: posts.length,
+        colorVar: t.colorVar,
+        sentiment: posts.length
+          ? Number((posts.reduce((s, p) => s + p.sentiment, 0) / posts.length).toFixed(3))
+          : 0,
+        engagement: posts.reduce((s, p) => s + p.likes + p.comments + p.saves + p.shares, 0),
+      };
+    });
+  }
+
+  function sentimentTimeline() {
+    const byWeek = new Map<string, { week: string; sentiment: number; n: number; posts: number }>();
+    for (const p of [...ENRICHED].sort((a, b) => a.timestamp.localeCompare(b.timestamp))) {
+      const d = new Date(p.timestamp);
+      const week = `${d.toLocaleString("en", { month: "short" })} ${String(d.getDate()).padStart(2, "0")}`;
+      const cur = byWeek.get(week) ?? { week, sentiment: 0, n: 0, posts: 0 };
+      cur.sentiment += p.sentiment;
+      cur.n++;
+      cur.posts++;
+      byWeek.set(week, cur);
+    }
+    return [...byWeek.values()].map((v) => ({
+      week: v.week,
+      sentiment: Number((v.sentiment / v.n).toFixed(3)),
+      posts: v.posts,
+    }));
+  }
+
+  function entityFrequency(limit = 14) {
+    const map = new Map<string, { text: string; type: EntityType; count: number }>();
+    for (const p of ENRICHED) {
+      for (const e of p.entities) {
+        const cur = map.get(e.text) ?? { text: e.text, type: e.type, count: 0 };
+        cur.count++;
+        map.set(e.text, cur);
+      }
+    }
+    return [...map.values()].sort((a, b) => b.count - a.count).slice(0, limit);
+  }
+
+
+  return {
+    isDemo,
+    RAW: raw,
+    EDGES: edges,
+    ENRICHED,
+    AUTHORS,
+    HASHTAG_STATS,
+    CO_OCCURRENCE,
+    CORPUS_STATS,
+    retrieve,
+    topicDistribution,
+    sentimentTimeline,
+    entityFrequency,
+  };
+}
+
+export const DEMO_CORPUS = buildCorpus(RAW_POSTS, FOLLOW_EDGES, true);
+export const { ENRICHED, AUTHORS, HASHTAG_STATS, CO_OCCURRENCE, CORPUS_STATS, retrieve, topicDistribution, sentimentTimeline, entityFrequency } = DEMO_CORPUS;
 
 /** Enrich an arbitrary external caption (e.g. a pasted Instagram post). */
 export function analyzeText(text: string, hashtags: string[] = []) {
