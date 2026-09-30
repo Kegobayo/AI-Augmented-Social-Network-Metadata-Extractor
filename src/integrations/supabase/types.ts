@@ -14,7 +14,120 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      instagram_connections: {
+        Row: {
+          access_token: string
+          followers: number | null
+          ig_user_id: string | null
+          updated_at: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          access_token: string
+          followers?: number | null
+          ig_user_id?: string | null
+          updated_at?: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          access_token?: string
+          followers?: number | null
+          ig_user_id?: string | null
+          updated_at?: string
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      saved_posts: {
+        Row: {
+          ai_insight: string | null
+          author: string
+          caption: string
+          comments: number
+          comments_sample: string[]
+          created_at: string
+          emotion: string | null
+          entities: Json
+          external_id: string
+          followers: number
+          hashtags: string[]
+          id: string
+          likes: number
+          media_type: string
+          media_url: string | null
+          mentions: string[]
+          permalink: string | null
+          posted_at: string
+          reach: number | null
+          saves: number
+          sentiment: number | null
+          shares: number
+          source: string
+          topic: string | null
+          user_id: string
+          views: number | null
+        }
+        Insert: {
+          ai_insight?: string | null
+          author: string
+          caption?: string
+          comments?: number
+          comments_sample?: string[]
+          created_at?: string
+          emotion?: string | null
+          entities?: Json
+          external_id: string
+          followers?: number
+          hashtags?: string[]
+          id?: string
+          likes?: number
+          media_type?: string
+          media_url?: string | null
+          mentions?: string[]
+          permalink?: string | null
+          posted_at?: string
+          reach?: number | null
+          saves?: number
+          sentiment?: number | null
+          shares?: number
+          source?: string
+          topic?: string | null
+          user_id: string
+          views?: number | null
+        }
+        Update: {
+          ai_insight?: string | null
+          author?: string
+          caption?: string
+          comments?: number
+          comments_sample?: string[]
+          created_at?: string
+          emotion?: string | null
+          entities?: Json
+          external_id?: string
+          followers?: number
+          hashtags?: string[]
+          id?: string
+          likes?: number
+          media_type?: string
+          media_url?: string | null
+          mentions?: string[]
+          permalink?: string | null
+          posted_at?: string
+          reach?: number | null
+          saves?: number
+          sentiment?: number | null
+          shares?: number
+          source?: string
+          topic?: string | null
+          user_id?: string
+          views?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
