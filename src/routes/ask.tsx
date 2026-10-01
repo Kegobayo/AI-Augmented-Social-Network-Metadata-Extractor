@@ -3,7 +3,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 
 import { Panel, Shell, SentimentPill } from "@/components/shell";
-import { retrieve, type Retrieved } from "@/lib/enrichment";
+import { type Retrieved } from "@/lib/enrichment";
+import { useCorpus } from "@/lib/corpus-context";
 import { askKnowledgeBase } from "@/lib/rag.functions";
 
 export const Route = createFileRoute("/ask")({
@@ -35,6 +36,7 @@ const SUGGESTIONS = [
 ];
 
 function Ask() {
+  const { retrieve } = useCorpus();
   const ask = useServerFn(askKnowledgeBase);
   const [question, setQuestion] = useState("");
   const [mode, setMode] = useState<"answer" | "brief">("answer");

@@ -272,109 +272,6 @@ export type AuthorNode = {
   avgSentiment: number;
   dominantTopic: string;
 };
-export type HashtagStat = { tag: string; count: number; reach: number };
-
-export const HASHTAG_STATS: HashtagStat[] = (() => {
-  const map = new Map<string, HashtagStat>();
-  for (const p of ENRICHED) {
-    for (const tag of p.hashtags) {
-      const cur = map.get(tag) ?? { tag, count: 0, reach: 0 };
-      cur.count++;
-      cur.reach += p.likes + p.shares;
-      map.set(tag, cur);
-    }
-  }
-  return [...map.values()].sort((a, b) => b.count - a.count);
-})();
-
-export type CoOccurrence = { a: string; b: string; weight: number };
-
-export const CO_OCCURRENCE: CoOccurrence[] = (() => {
-  const map = new Map<string, CoOccurrence>();
-  for (const p of ENRICHED) {
-    const tags = [...p.hashtags].sort();
-    for (let i = 0; i < tags.length; i++) {
-      for (let j = i + 1; j < tags.length; j++) {
-        const key = `${tags[i]}|${tags[j]}`;
-        const cur = map.get(key) ?? { a: tags[i]!, b: tags[j]!, weight: 0 };
-        cur.weight++;
-        map.set(key, cur);
-      }
-    }
-  }
-  return [...map.values()].filter((e) => e.weight > 1).sort((a, b) => b.weight - a.weight);
-})();
-
-/* ------------------------------------------------------ retrieval engine */
-
-export type Retrieved = { post: EnrichedPost; score: number; graphBoost: number };
-
-/**
- * Layer 3 retrieval: semantic similarity over the vector index, boosted by
- * graph context (author influence and hashtag overlap with the query).
- */
-const IDF: Map<string, number> = (() => {
-  const df = new Map<string, number>();
-  for (const p of ENRICHED) {
-    for (const t of new Set(p.tokens)) df.set(t, (df.get(t) ?? 0) + 1);
-  }
-  const idf = new Map<string, number>();
-  for (const [t, n] of df) idf.set(t, Math.log(1 + ENRICHED.length / n));
-  return idf;
-})();
-
-function tfidf(tokens: string[]) {
-  const vec = new Map<string, number>();
-  for (const t of tokens) vec.set(t, (vec.get(t) ?? 0) + (IDF.get(t) ?? Math.log(1 + ENRICHED.length)));
-  const norm = Math.hypot(...vec.values()) || 1;
-  for (const [t, v] of vec) vec.set(t, v / norm);
-  return vec;
-}
-
-const POST_VECTORS = new Map(ENRICHED.map((p) => [p.id, tfidf(p.tokens)]));
-
-function sparseCosine(a: Map<string, number>, b: Map<string, number>) {
-  let s = 0;
-  for (const [t, v] of a) s += v * (b.get(t) ?? 0);
-  return s;
-}
-
-export function retrieve(query: string, k = 6): Retrieved[] {
-  const qTokens = tokenize(query);
-  const q = tfidf(qTokens);
-  const qSet = new Set(qTokens);
-  const maxInfluence = Math.max(...AUTHORS.map((a) => a.influence));
-  return ENRICHED.map((post) => {
-    const semantic = sparseCosine(q, POST_VECTORS.get(post.id)!);
-    const tagOverlap = post.hashtags.filter((h) => qSet.has(h.replace("#", ""))).length;
-    const author = AUTHORS.find((a) => a.id === post.author);
-    const graphBoost = Number(
-      ((author ? author.influence / maxInfluence : 0) * 0.04 + tagOverlap * 0.05).toFixed(4),
-    );
-    return { post, score: Number((semantic + graphBoost).toFixed(4)), graphBoost };
-  })
-    .sort((a, b) => b.score - a.score)
-    .slice(0, k);
-}
-
-
-/* --------------------------------------------------------- corpus summary */
-
-export const CORPUS_STATS = {
-  posts: ENRICHED.length,
-  authors: AUTHORS.length,
-  hashtags: HASHTAG_STATS.length,
-  entities: new Set(ENRICHED.flatMap((p) => p.entities.map((e) => e.text))).size,
-  ties: FOLLOW_EDGES.length,
-  interactions: ENRICHED.reduce((s, p) => s + p.likes + p.comments + p.saves + p.shares, 0),
-  avgSentiment: Number(
-    (ENRICHED.reduce((s, p) => s + p.sentiment, 0) / ENRICHED.length).toFixed(3),
-  ),
-  span: {
-    from: ENRICHED.map((p) => p.timestamp).sort()[0]!.slice(0, 10),
-    to: ENRICHED.map((p) => p.timestamp).sort().at(-1)!.slice(0, 10),
-  },
-};
 
 function labelPropagation(nodes: string[], edges: [string, string][]) {
   const labels = new Map(nodes.map((n) => [n, n]));
@@ -403,6 +300,12 @@ function labelPropagation(nodes: string[], edges: [string, string][]) {
   }
   return labels;
 }
+
+export type HashtagStat = { tag: string; count: number; reach: number };
+
+export type CoOccurrence = { a: string; b: string; weight: number };
+
+export type Retrieved = { post: EnrichedPost; score: number; graphBoost: number };
 
 export type Corpus = ReturnType<typeof buildCorpus>;
 
@@ -457,6 +360,106 @@ export function buildCorpus(raw: RawPost[], edges: [string, string][], isDemo = 
   /* ------------------------------------------------- hashtag co-occurrence */
 
 
+  const HASHTAG_STATS: HashtagStat[] = (() => {
+    const map = new Map<string, HashtagStat>();
+    for (const p of ENRICHED) {
+      for (const tag of p.hashtags) {
+        const cur = map.get(tag) ?? { tag, count: 0, reach: 0 };
+        cur.count++;
+        cur.reach += p.likes + p.shares;
+        map.set(tag, cur);
+      }
+    }
+    return [...map.values()].sort((a, b) => b.count - a.count);
+  })();
+
+
+  const CO_OCCURRENCE: CoOccurrence[] = (() => {
+    const map = new Map<string, CoOccurrence>();
+    for (const p of ENRICHED) {
+      const tags = [...p.hashtags].sort();
+      for (let i = 0; i < tags.length; i++) {
+        for (let j = i + 1; j < tags.length; j++) {
+          const key = `${tags[i]}|${tags[j]}`;
+          const cur = map.get(key) ?? { a: tags[i]!, b: tags[j]!, weight: 0 };
+          cur.weight++;
+          map.set(key, cur);
+        }
+      }
+    }
+    return [...map.values()].filter((e) => e.weight > 1).sort((a, b) => b.weight - a.weight);
+  })();
+
+  /* ------------------------------------------------------ retrieval engine */
+
+
+  /**
+   * Layer 3 retrieval: semantic similarity over the vector index, boosted by
+   * graph context (author influence and hashtag overlap with the query).
+   */
+  const IDF: Map<string, number> = (() => {
+    const df = new Map<string, number>();
+    for (const p of ENRICHED) {
+      for (const t of new Set(p.tokens)) df.set(t, (df.get(t) ?? 0) + 1);
+    }
+    const idf = new Map<string, number>();
+    for (const [t, n] of df) idf.set(t, Math.log(1 + ENRICHED.length / n));
+    return idf;
+  })();
+
+  function tfidf(tokens: string[]) {
+    const vec = new Map<string, number>();
+    for (const t of tokens) vec.set(t, (vec.get(t) ?? 0) + (IDF.get(t) ?? Math.log(1 + ENRICHED.length)));
+    const norm = Math.hypot(...vec.values()) || 1;
+    for (const [t, v] of vec) vec.set(t, v / norm);
+    return vec;
+  }
+
+  const POST_VECTORS = new Map(ENRICHED.map((p) => [p.id, tfidf(p.tokens)]));
+
+  function sparseCosine(a: Map<string, number>, b: Map<string, number>) {
+    let s = 0;
+    for (const [t, v] of a) s += v * (b.get(t) ?? 0);
+    return s;
+  }
+
+  function retrieve(query: string, k = 6): Retrieved[] {
+    const qTokens = tokenize(query);
+    const q = tfidf(qTokens);
+    const qSet = new Set(qTokens);
+    const maxInfluence = Math.max(1, ...AUTHORS.map((a) => a.influence));
+    return ENRICHED.map((post) => {
+      const semantic = sparseCosine(q, POST_VECTORS.get(post.id)!);
+      const tagOverlap = post.hashtags.filter((h) => qSet.has(h.replace("#", ""))).length;
+      const author = AUTHORS.find((a) => a.id === post.author);
+      const graphBoost = Number(
+        ((author ? author.influence / maxInfluence : 0) * 0.04 + tagOverlap * 0.05).toFixed(4),
+      );
+      return { post, score: Number((semantic + graphBoost).toFixed(4)), graphBoost };
+    })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, k);
+  }
+
+
+  /* --------------------------------------------------------- corpus summary */
+
+  const CORPUS_STATS = {
+    posts: ENRICHED.length,
+    authors: AUTHORS.length,
+    hashtags: HASHTAG_STATS.length,
+    entities: new Set(ENRICHED.flatMap((p) => p.entities.map((e) => e.text))).size,
+    ties: edges.length,
+    interactions: ENRICHED.reduce((s, p) => s + p.likes + p.comments + p.saves + p.shares, 0),
+    avgSentiment: Number(
+      (ENRICHED.reduce((s, p) => s + p.sentiment, 0) / Math.max(1, ENRICHED.length)).toFixed(3),
+    ),
+    span: {
+      from: (ENRICHED.map((p) => p.timestamp).sort()[0] ?? "").slice(0, 10),
+      to: (ENRICHED.map((p) => p.timestamp).sort().at(-1) ?? "").slice(0, 10),
+    },
+  };
+
   function topicDistribution() {
     return TOPICS.map((t) => {
       const posts = ENRICHED.filter((p) => p.topic.id === t.id);
@@ -505,20 +508,7 @@ export function buildCorpus(raw: RawPost[], edges: [string, string][], isDemo = 
   }
 
 
-  return {
-    isDemo,
-    RAW: raw,
-    EDGES: edges,
-    ENRICHED,
-    AUTHORS,
-    HASHTAG_STATS,
-    CO_OCCURRENCE,
-    CORPUS_STATS,
-    retrieve,
-    topicDistribution,
-    sentimentTimeline,
-    entityFrequency,
-  };
+  return { isDemo, RAW: raw, EDGES: edges, ENRICHED, AUTHORS, HASHTAG_STATS, CO_OCCURRENCE, CORPUS_STATS, retrieve, topicDistribution, sentimentTimeline, entityFrequency };
 }
 
 export const DEMO_CORPUS = buildCorpus(RAW_POSTS, FOLLOW_EDGES, true);

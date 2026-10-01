@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { analyzeInstagramPost } from "@/lib/instagram.functions";
+import { saveAnalyzedPost } from "@/lib/instagram-graph.functions";
+import { useCorpusState } from "@/lib/corpus-context";
+import { Link } from "@tanstack/react-router";
 import { Panel, SentimentPill } from "@/components/shell";
 
 type Result = Awaited<ReturnType<typeof analyzeInstagramPost>>;
@@ -30,6 +33,33 @@ function renderMarkdown(md: string) {
 
 export function InstagramInsights() {
   const analyze = useServerFn(analyzeInstagramPost);
+  const save = useServerFn(saveAnalyzedPost);
+  const { user, refresh } = useCorpusState();
+  const [saveState, setSaveState] = useState<string | null>(null);
+
+  async function doSave() {
+    if (!result) return;
+    setSaveState("Saving…");
+    try {
+      const r = await save({
+        data: {
+          url,
+          author: result.author,
+          likes: result.likes,
+          comments: result.comments,
+          image: result.image,
+          caption: result.caption,
+          hashtags: result.hashtags,
+          mentions: result.mentions,
+          insight: result.insight || null,
+        },
+      });
+      setSaveState(r.ok ? "Saved to your corpus." : r.error);
+      if (r.ok) await refresh();
+    } catch (e) {
+      setSaveState((e as Error).message);
+    }
+  }
   const [url, setUrl] = useState("");
   const [caption, setCaption] = useState("");
   const [showCaption, setShowCaption] = useState(false);
@@ -42,6 +72,7 @@ export function InstagramInsights() {
     setLoading(true);
     setError(null);
     setResult(null);
+    setSaveState(null);
     try {
       const r = await analyze({ data: { url, caption: caption || undefined } });
       if (r.ok) setResult(r);
@@ -139,6 +170,19 @@ export function InstagramInsights() {
               </div>
             ) : null}
             <p className="line-clamp-6 text-xs text-muted-foreground">{result.caption}</p>
+            {user ? (
+              <button
+                onClick={doSave}
+                className="w-full rounded-md border border-primary px-3 py-1.5 text-sm font-medium text-primary hover:bg-secondary"
+              >
+                Save to my corpus
+              </button>
+            ) : (
+              <Link to="/auth" className="block text-xs text-primary underline underline-offset-4">
+                Sign in to save this post to your corpus
+              </Link>
+            )}
+            {saveState ? <p className="text-xs text-muted-foreground">{saveState}</p> : null}
           </div>
           <div>
             {result.insight ? (
