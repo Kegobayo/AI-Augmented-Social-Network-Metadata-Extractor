@@ -10,14 +10,21 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as ArchitectureRouteImport } from './routes/architecture'
 import { Route as AskRouteImport } from './routes/ask'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CorpusRouteImport } from './routes/corpus'
 import { Route as NetworkRouteImport } from './routes/network'
+import { Route as AuthenticatedMyCorpusRouteImport } from './routes/_authenticated/my-corpus'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ArchitectureRoute = ArchitectureRouteImport.update({
@@ -30,6 +37,11 @@ const AskRoute = AskRouteImport.update({
   path: '/ask',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CorpusRoute = CorpusRouteImport.update({
   id: '/corpus',
   path: '/corpus',
@@ -40,41 +52,78 @@ const NetworkRoute = NetworkRouteImport.update({
   path: '/network',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedMyCorpusRoute = AuthenticatedMyCorpusRouteImport.update({
+  id: '/my-corpus',
+  path: '/my-corpus',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/architecture': typeof ArchitectureRoute
   '/ask': typeof AskRoute
+  '/auth': typeof AuthRoute
   '/corpus': typeof CorpusRoute
   '/network': typeof NetworkRoute
+  '/my-corpus': typeof AuthenticatedMyCorpusRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/architecture': typeof ArchitectureRoute
   '/ask': typeof AskRoute
+  '/auth': typeof AuthRoute
   '/corpus': typeof CorpusRoute
   '/network': typeof NetworkRoute
+  '/my-corpus': typeof AuthenticatedMyCorpusRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/architecture': typeof ArchitectureRoute
   '/ask': typeof AskRoute
+  '/auth': typeof AuthRoute
   '/corpus': typeof CorpusRoute
   '/network': typeof NetworkRoute
+  '/_authenticated/my-corpus': typeof AuthenticatedMyCorpusRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/architecture' | '/ask' | '/corpus' | '/network'
+  fullPaths:
+    | '/'
+    | '/architecture'
+    | '/ask'
+    | '/auth'
+    | '/corpus'
+    | '/network'
+    | '/my-corpus'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/architecture' | '/ask' | '/corpus' | '/network'
-  id: '__root__' | '/' | '/architecture' | '/ask' | '/corpus' | '/network'
+  to:
+    | '/'
+    | '/architecture'
+    | '/ask'
+    | '/auth'
+    | '/corpus'
+    | '/network'
+    | '/my-corpus'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/architecture'
+    | '/ask'
+    | '/auth'
+    | '/corpus'
+    | '/network'
+    | '/_authenticated/my-corpus'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   ArchitectureRoute: typeof ArchitectureRoute
   AskRoute: typeof AskRoute
+  AuthRoute: typeof AuthRoute
   CorpusRoute: typeof CorpusRoute
   NetworkRoute: typeof NetworkRoute
 }
@@ -86,6 +135,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/architecture': {
@@ -102,6 +158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AskRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/corpus': {
       id: '/corpus'
       path: '/corpus'
@@ -116,13 +179,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NetworkRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/my-corpus': {
+      id: '/_authenticated/my-corpus'
+      path: '/my-corpus'
+      fullPath: '/my-corpus'
+      preLoaderRoute: typeof AuthenticatedMyCorpusRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedMyCorpusRoute: typeof AuthenticatedMyCorpusRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedMyCorpusRoute: AuthenticatedMyCorpusRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   ArchitectureRoute: ArchitectureRoute,
   AskRoute: AskRoute,
+  AuthRoute: AuthRoute,
   CorpusRoute: CorpusRoute,
   NetworkRoute: NetworkRoute,
 }

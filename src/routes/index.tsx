@@ -65,6 +65,20 @@ function Dashboard() {
         />
       </div>
 
+      <p className="mt-3 text-xs text-muted-foreground">
+        {isDemo ? (
+          <>
+            Showing the demo corpus.{" "}
+            <Link to="/my-corpus" className="text-primary underline underline-offset-4">
+              Sign in and import your Instagram posts
+            </Link>{" "}
+            to analyse real data.
+          </>
+        ) : (
+          "Showing your saved corpus."
+        )}
+      </p>
+
       <InstagramInsights />
 
       <div className="mt-6 grid gap-5 lg:grid-cols-2">

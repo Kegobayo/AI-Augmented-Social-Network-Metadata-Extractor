@@ -1,11 +1,14 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useCorpusState } from "@/lib/corpus-context";
 
 const NAV = [
   { to: "/", label: "Dashboard", note: "Layer 4" },
   { to: "/corpus", label: "Corpus & metadata", note: "Layer 1–2" },
   { to: "/network", label: "Network analysis", note: "Layer 2" },
   { to: "/ask", label: "Generative query", note: "Layer 3" },
+  { to: "/my-corpus", label: "My corpus", note: "Saved" },
   { to: "/architecture", label: "Architecture", note: "Ch. 3" },
 ] as const;
 
@@ -46,6 +49,7 @@ export function Shell({
                 </span>
               </Link>
             ))}
+            <AuthLink />
           </div>
         </nav>
       </header>
@@ -107,5 +111,22 @@ export function SentimentPill({ value }: { value: number }) {
       {value > 0 ? "+" : ""}
       {value.toFixed(2)}
     </span>
+  );
+}
+
+function AuthLink() {
+  const { user, authReady } = useCorpusState();
+  if (!authReady) return null;
+  return user ? (
+    <button
+      onClick={() => supabase.auth.signOut()}
+      className="ml-auto px-3 py-3 text-sm text-muted-foreground hover:text-foreground"
+    >
+      Sign out
+    </button>
+  ) : (
+    <Link to="/auth" className="ml-auto px-3 py-3 text-sm font-medium text-primary">
+      Sign in
+    </Link>
   );
 }

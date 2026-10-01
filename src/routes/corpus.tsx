@@ -44,7 +44,7 @@ function Corpus() {
         p.location.toLowerCase().includes(q);
       return matchesTopic && matchesQuery;
     });
-  }, [query, topicId]);
+  }, [query, topicId, ENRICHED]);
 
   const selected = ENRICHED.find((p) => p.id === selectedId) ?? filtered[0] ?? ENRICHED[0]!;
 
