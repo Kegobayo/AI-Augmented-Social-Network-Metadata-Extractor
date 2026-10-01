@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
 import { Panel, Shell, SentimentPill } from "@/components/shell";
-import { ENRICHED, TOPICS, type EnrichedPost } from "@/lib/enrichment";
+import { TOPICS, type EnrichedPost } from "@/lib/enrichment";
+import { useCorpus } from "@/lib/corpus-context";
 
 export const Route = createFileRoute("/corpus")({
   head: () => ({
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/corpus")({
 });
 
 function Corpus() {
+  const { ENRICHED } = useCorpus();
   const [query, setQuery] = useState("");
   const [topicId, setTopicId] = useState("all");
   const [selectedId, setSelectedId] = useState(ENRICHED[0]!.id);

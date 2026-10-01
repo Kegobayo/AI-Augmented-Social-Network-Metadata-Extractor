@@ -2,8 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
 import { Panel, Shell, SentimentPill } from "@/components/shell";
-import { FOLLOW_EDGES } from "@/data/corpus";
-import { AUTHORS, CO_OCCURRENCE, HASHTAG_STATS } from "@/lib/enrichment";
+import { useCorpus } from "@/lib/corpus-context";
 
 export const Route = createFileRoute("/network")({
   head: () => ({
@@ -36,6 +35,7 @@ function colorFor(community: string) {
 }
 
 function Network() {
+  const { AUTHORS, CO_OCCURRENCE, HASHTAG_STATS, EDGES: FOLLOW_EDGES } = useCorpus();
   const [focus, setFocus] = useState<string | null>(null);
 
   const layout = useMemo(() => {
@@ -46,7 +46,7 @@ function Network() {
       const angle = (i / AUTHORS.length) * Math.PI * 2 - Math.PI / 2;
       return { ...a, x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
     });
-  }, []);
+  }, [AUTHORS]);
 
   const pos = Object.fromEntries(layout.map((n) => [n.id, n]));
   const maxInfluence = Math.max(...AUTHORS.map((a) => a.influence));

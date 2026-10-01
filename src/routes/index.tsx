@@ -14,15 +14,7 @@ import {
 
 import { Panel, Shell, Stat, SentimentPill } from "@/components/shell";
 import { InstagramInsights } from "@/components/instagram-insights";
-import {
-  AUTHORS,
-  CORPUS_STATS,
-  ENRICHED,
-  HASHTAG_STATS,
-  entityFrequency,
-  sentimentTimeline,
-  topicDistribution,
-} from "@/lib/enrichment";
+import { useCorpus } from "@/lib/corpus-context";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -47,6 +39,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Dashboard() {
+  const { AUTHORS, CORPUS_STATS, ENRICHED, HASHTAG_STATS, entityFrequency, sentimentTimeline, topicDistribution, isDemo } = useCorpus();
   const topics = topicDistribution();
   const timeline = sentimentTimeline();
   const entities = entityFrequency(12);
