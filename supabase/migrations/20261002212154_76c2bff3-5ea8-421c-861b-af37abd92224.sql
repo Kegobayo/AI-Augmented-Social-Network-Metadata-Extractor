@@ -1,0 +1,2 @@
+GRANT SELECT ON public.saved_posts TO anon, authenticated;
+CREATE POLICY "Anyone can view the shared corpus" ON public.saved_posts FOR SELECT TO anon, authenticated USING (user_id = '00000000-0000-0000-0000-000000000000'::uuid);
