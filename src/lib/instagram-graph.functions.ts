@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { analyzeText } from "./enrichment";
 
 /**
@@ -9,6 +8,9 @@ import { analyzeText } from "./enrichment";
  * (Instagram Login). Each signed-in user links their own Business/Creator
  * account with an access token; the token is stored server-side only.
  */
+
+/** Single shared workspace — the app is open to everyone, no sign-in. */
+const SHARED = "00000000-0000-0000-0000-000000000000";
 
 const GRAPH = "https://graph.instagram.com/v23.0";
 
@@ -27,9 +29,8 @@ async function graph<T>(path: string, token: string, params: Record<string, stri
 }
 
 export const connectInstagram = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ token: z.string().trim().min(20).max(1000) }).parse(d))
-  .handler(async ({ data, context }) => {
+  .handler(async ({ data }) => {
     let me: { user_id?: string; id?: string; username?: string; followers_count?: number };
     try {
       me = await graph("me", data.token, { fields: "user_id,username,followers_count" });
@@ -38,7 +39,7 @@ export const connectInstagram = createServerFn({ method: "POST" })
     }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("instagram_connections").upsert({
-      user_id: context.userId,
+      user_id: SHARED,
       ig_user_id: me.user_id ?? me.id ?? null,
       username: me.username ?? null,
       followers: me.followers_count ?? null,
@@ -67,14 +68,13 @@ type Media = {
 };
 
 export const syncInstagram = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ limit: z.number().int().min(1).max(50).default(25) }).parse(d))
-  .handler(async ({ data, context }) => {
+  .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: conn } = await supabaseAdmin
       .from("instagram_connections")
       .select("access_token, username, followers")
-      .eq("user_id", context.userId)
+      .eq("user_id", SHARED)
       .maybeSingle();
     if (!conn) return { ok: false as const, error: "Link your Instagram account first." };
     const token = conn.access_token;
@@ -116,7 +116,7 @@ export const syncInstagram = createServerFn({ method: "POST" })
       const mentions = caption.match(/@[\w.]+/g) ?? [];
       const a = analyzeText(`${caption} ${comments.join(" ")}`, hashtags);
       rows.push({
-        user_id: context.userId,
+        user_id: SHARED,
         source: "instagram",
         external_id: `ig_${m.id}`,
         author: `@${m.username ?? conn.username ?? "me"}`,
@@ -143,7 +143,8 @@ export const syncInstagram = createServerFn({ method: "POST" })
     }
 
     if (rows.length) {
-      const { error } = await context.supabase.from("saved_posts").upsert(rows, { onConflict: "user_id,external_id" });
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("saved_posts").upsert(rows, { onConflict: "user_id,external_id" });
       if (error) {
         console.error(error);
         return { ok: false as const, error: "Could not save the imported posts." };
@@ -166,15 +167,15 @@ const saveSchema = z.object({
 
 /** Save a post analysed from a link on the dashboard into the user's corpus. */
 export const saveAnalyzedPost = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => saveSchema.parse(d))
-  .handler(async ({ data, context }) => {
+  .handler(async ({ data }) => {
     const code = data.url.match(/instagram\.com\/(?:p|reel|reels|tv)\/([\w-]+)/i)?.[1] ?? data.url;
     const hashtags = data.hashtags.map((h) => h.toLowerCase());
     const a = analyzeText(data.caption, hashtags);
-    const { error } = await context.supabase.from("saved_posts").upsert(
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("saved_posts").upsert(
       {
-        user_id: context.userId,
+        user_id: SHARED,
         source: "link",
         external_id: `url_${code}`,
         author: `@${(data.author ?? "unknown").replace(/^@/, "")}`,
@@ -198,5 +199,29 @@ export const saveAnalyzedPost = createServerFn({ method: "POST" })
       console.error(error);
       return { ok: false as const, error: "Could not save this post." };
     }
+    return { ok: true as const };
+  });
+
+export const getConnection = createServerFn({ method: "GET" }).handler(async () => {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("instagram_connections")
+    .select("username, followers, updated_at")
+    .eq("user_id", SHARED)
+    .maybeSingle();
+  return data ?? null;
+});
+
+export const unlinkInstagram = createServerFn({ method: "POST" }).handler(async () => {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  await supabaseAdmin.from("instagram_connections").delete().eq("user_id", SHARED);
+  return { ok: true as const };
+});
+
+export const removeSavedPost = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("saved_posts").delete().eq("id", data.id).eq("user_id", SHARED);
     return { ok: true as const };
   });
