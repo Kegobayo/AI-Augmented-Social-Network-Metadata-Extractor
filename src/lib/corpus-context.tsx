@@ -85,19 +85,16 @@ export function CorpusProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refresh = useCallback(async () => {
-    if (!user) {
-      setSaved([]);
-      return;
-    }
     setLoading(true);
     const { data, error } = await supabase
       .from("saved_posts")
       .select("*")
+      .eq("user_id", "00000000-0000-0000-0000-000000000000")
       .order("posted_at", { ascending: false })
       .limit(1000);
     if (!error) setSaved(data ?? []);
     setLoading(false);
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     void refresh();
