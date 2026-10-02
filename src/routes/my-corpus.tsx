@@ -3,17 +3,16 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 
 import { Panel, Shell, SentimentPill, Stat } from "@/components/shell";
-import { supabase } from "@/integrations/supabase/client";
 import { useCorpusState } from "@/lib/corpus-context";
-import { connectInstagram, syncInstagram } from "@/lib/instagram-graph.functions";
+import { connectInstagram, getConnection, removeSavedPost, syncInstagram, unlinkInstagram } from "@/lib/instagram-graph.functions";
 
-export const Route = createFileRoute("/_authenticated/my-corpus")({
+export const Route = createFileRoute("/my-corpus")({
   head: () => ({
     meta: [
       { title: "My corpus | Social Network Metadata Extractor" },
       { name: "description", content: "Link your Instagram account, import posts and manage your long-term knowledge corpus." },
       { property: "og:title", content: "My corpus | Metadata Extractor" },
-      { property: "og:description", content: "Your private Instagram metadata corpus." },
+      { property: "og:description", content: "The shared Instagram metadata corpus." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -24,17 +23,19 @@ export const Route = createFileRoute("/_authenticated/my-corpus")({
 type Conn = { username: string | null; followers: number | null; updated_at: string } | null;
 
 function MyCorpus() {
-  const { saved, refresh, user, corpus } = useCorpusState();
+  const { saved, refresh, corpus } = useCorpusState();
   const connect = useServerFn(connectInstagram);
   const sync = useServerFn(syncInstagram);
+  const fetchConn = useServerFn(getConnection);
+  const unlink = useServerFn(unlinkInstagram);
+  const del = useServerFn(removeSavedPost);
   const [conn, setConn] = useState<Conn>(null);
   const [token, setToken] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
   async function loadConn() {
-    const { data } = await supabase.from("instagram_connections").select("username, followers, updated_at").maybeSingle();
-    setConn(data);
+    setConn(await fetchConn());
   }
   useEffect(() => {
     void loadConn();
@@ -71,17 +72,17 @@ function MyCorpus() {
   }
 
   async function disconnect() {
-    await supabase.from("instagram_connections").delete().eq("user_id", user!.id);
+    await unlink();
     setConn(null);
   }
 
   async function remove(id: string) {
-    await supabase.from("saved_posts").delete().eq("id", id);
+    await del({ data: { id } });
     await refresh();
   }
 
   return (
-    <Shell title="My corpus" subtitle={`Signed in as ${user?.email ?? ""}. Saved posts power the dashboard, corpus browser, network map and queries.`}>
+    <Shell title="My corpus" subtitle={`Shared corpus, open to everyone. Saved posts power the dashboard, corpus browser, network map and queries.`}>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat value={saved.length} label="Saved posts" />
         <Stat value={corpus.isDemo ? 0 : corpus.AUTHORS.length} label="Accounts" />
@@ -111,7 +112,7 @@ function MyCorpus() {
           <form onSubmit={doConnect} className="space-y-3">
             <p className="text-sm text-muted-foreground">
               Paste an Instagram access token for your Business or Creator account (from your Meta developer app, “Instagram API with
-              Instagram Login”). It is stored privately and never shown in the browser again.
+              Instagram Login”). It is stored securely on the server and never shown in the browser again.
             </p>
             <div className="flex flex-col gap-2 sm:flex-row">
               <input

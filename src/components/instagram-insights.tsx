@@ -3,7 +3,6 @@ import { useServerFn } from "@tanstack/react-start";
 import { analyzeInstagramPost } from "@/lib/instagram.functions";
 import { saveAnalyzedPost } from "@/lib/instagram-graph.functions";
 import { useCorpusState } from "@/lib/corpus-context";
-import { Link } from "@tanstack/react-router";
 import { Panel, SentimentPill } from "@/components/shell";
 
 type Result = Awaited<ReturnType<typeof analyzeInstagramPost>>;
@@ -34,7 +33,7 @@ function renderMarkdown(md: string) {
 export function InstagramInsights() {
   const analyze = useServerFn(analyzeInstagramPost);
   const save = useServerFn(saveAnalyzedPost);
-  const { user, refresh } = useCorpusState();
+  const { refresh } = useCorpusState();
   const [saveState, setSaveState] = useState<string | null>(null);
 
   async function doSave() {
@@ -170,18 +169,12 @@ export function InstagramInsights() {
               </div>
             ) : null}
             <p className="line-clamp-6 text-xs text-muted-foreground">{result.caption}</p>
-            {user ? (
-              <button
+                          <button
                 onClick={doSave}
                 className="w-full rounded-md border border-primary px-3 py-1.5 text-sm font-medium text-primary hover:bg-secondary"
               >
                 Save to my corpus
               </button>
-            ) : (
-              <Link to="/auth" className="block text-xs text-primary underline underline-offset-4">
-                Sign in to save this post to your corpus
-              </Link>
-            )}
             {saveState ? <p className="text-xs text-muted-foreground">{saveState}</p> : null}
           </div>
           <div>
