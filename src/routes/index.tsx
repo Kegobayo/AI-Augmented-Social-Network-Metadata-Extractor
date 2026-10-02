@@ -70,7 +70,7 @@ function Dashboard() {
           <>
             Showing the demo corpus.{" "}
             <Link to="/my-corpus" className="text-primary underline underline-offset-4">
-              Sign in and import your Instagram posts
+              Import Instagram posts
             </Link>{" "}
             to analyse real data.
           </>
