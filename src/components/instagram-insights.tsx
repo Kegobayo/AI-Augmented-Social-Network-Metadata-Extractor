@@ -30,7 +30,7 @@ function renderMarkdown(md: string) {
   });
 }
 
-export function InstagramInsights() {
+export function InstagramInsights({ onAnalysed }: { onAnalysed?: (topicId: string | null) => void } = {}) {
   const analyze = useServerFn(analyzeInstagramPost);
   const save = useServerFn(saveAnalyzedPost);
   const { refresh } = useCorpusState();
@@ -71,10 +71,14 @@ export function InstagramInsights() {
     setLoading(true);
     setError(null);
     setResult(null);
+    onAnalysed?.(null);
     setSaveState(null);
     try {
       const r = await analyze({ data: { url, caption: caption || undefined } });
-      if (r.ok) setResult(r);
+      if (r.ok) {
+        setResult(r);
+        onAnalysed?.(r.analysis.topicId);
+      }
       else {
         setError(r.error);
         if (r.needsCaption) setShowCaption(true);
@@ -144,7 +148,6 @@ export function InstagramInsights() {
                 ["Author", result.author ? `@${result.author}` : "—"],
                 ["Likes", result.likes?.toLocaleString() ?? "—"],
                 ["Comments", result.comments?.toLocaleString() ?? "—"],
-                ["Topic", result.analysis.topic],
                 ["Emotion", result.analysis.emotion],
               ].map(([k, v]) => (
                 <div key={k} className="paper-panel px-2 py-1.5">
@@ -159,6 +162,19 @@ export function InstagramInsights() {
                 </dd>
               </div>
             </dl>
+            <div className="paper-panel px-2 py-1.5 text-xs">
+              <dt className="label-caps">Topic category</dt>
+              <dd className="mt-0.5 text-foreground">
+                {result.analysis.topic}{" "}
+                <span className="font-mono text-muted-foreground">p={result.analysis.topicConfidence.toFixed(2)}</span>
+              </dd>
+              <dd className="mt-1 text-muted-foreground">
+                {result.analysis.topicTerms.length
+                  ? `Matched: ${result.analysis.topicTerms.join(", ")}`
+                  : "No known theme matched — filed under emerging topics."}
+              </dd>
+              <dd className="mt-1 text-primary">Highlighted in the topic distribution below.</dd>
+            </div>
             {result.hashtags.length ? (
               <div className="flex flex-wrap gap-1">
                 {result.hashtags.map((h) => (

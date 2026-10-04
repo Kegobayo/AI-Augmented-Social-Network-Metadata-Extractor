@@ -113,52 +113,67 @@ export function extractEntities(text: string): Entity[] {
 
 export type Topic = { id: string; label: string; keywords: string[]; colorVar: string };
 
+/**
+ * Topic taxonomy — the five research themes plus currently trending Instagram
+ * themes. Matching runs on caption tokens and hashtags (including compound
+ * hashtags such as #solarpower or #aiart, matched by keyword stems).
+ */
 export const TOPICS: Topic[] = [
-  {
-    id: "t1",
-    label: "Renewable energy & off-grid supply",
-    keywords: ["solar", "solarenergy", "renewableenergy", "inverter", "battery", "lithium", "offgrid", "cleantech", "diesel", "minigrid"],
-    colorVar: "var(--chart-1)",
-  },
-  {
-    id: "t2",
-    label: "Grid reliability & energy policy",
-    keywords: ["grid", "nationalgrid", "blackout", "powersector", "policy", "tariff", "metering", "meter", "consumerrights", "energyaccess", "electricity"],
-    colorVar: "var(--chart-2)",
-  },
-  {
-    id: "t3",
-    label: "Food security & agritech",
-    keywords: ["agritech", "coldchain", "foodsecurity", "farmers", "tomato", "tomatoes", "harvest", "drought", "irrigation", "yield", "market"],
-    colorVar: "var(--chart-3)",
-  },
-  {
-    id: "t4",
-    label: "Public health delivery",
-    keywords: ["healthcare", "publichealth", "malaria", "vaccine", "clinics", "health", "spoilage", "admissions", "community"],
-    colorVar: "var(--chart-4)",
-  },
-  {
-    id: "t5",
-    label: "Education, data & knowledge management",
-    keywords: ["education", "knowledgemanagement", "metadata", "research", "generativeai", "rag", "datascience", "digitalliteracy", "skills", "opendata", "seminar", "tacitknowledge", "socialnetworkanalysis", "students"],
-    colorVar: "var(--chart-5)",
-  },
+  { id: "t1", label: "Renewable energy & off-grid supply", colorVar: "var(--chart-1)",
+    keywords: ["solar", "solarenergy", "renewableenergy", "renewable", "inverter", "battery", "lithium", "offgrid", "cleantech", "diesel", "minigrid", "cleanenergy", "greenenergy"] },
+  { id: "t2", label: "Grid reliability & energy policy", colorVar: "var(--chart-2)",
+    keywords: ["grid", "nationalgrid", "blackout", "powersector", "tariff", "metering", "meter", "consumerrights", "energyaccess", "electricity", "nepa", "fuelsubsidy", "petrol"] },
+  { id: "t3", label: "Food security & agritech", colorVar: "var(--chart-3)",
+    keywords: ["agritech", "coldchain", "foodsecurity", "farmers", "farming", "agriculture", "tomato", "tomatoes", "harvest", "drought", "irrigation", "yield", "agribusiness"] },
+  { id: "t4", label: "Public health & wellness", colorVar: "var(--chart-4)",
+    keywords: ["healthcare", "publichealth", "malaria", "vaccine", "clinics", "health", "mentalhealth", "wellness", "selfcare", "hospital", "doctor", "nutrition", "therapy"] },
+  { id: "t5", label: "Education, data & knowledge management", colorVar: "var(--chart-5)",
+    keywords: ["education", "knowledgemanagement", "metadata", "research", "datascience", "digitalliteracy", "skills", "opendata", "seminar", "tacitknowledge", "socialnetworkanalysis", "students", "university", "learning", "scholarship"] },
+  { id: "t6", label: "AI & technology", colorVar: "var(--chart-6)",
+    keywords: ["ai", "artificialintelligence", "generativeai", "chatgpt", "openai", "machinelearning", "tech", "technology", "coding", "developer", "startup", "software", "gadget", "iphone", "robotics", "aiart", "rag"] },
+  { id: "t7", label: "Business, finance & entrepreneurship", colorVar: "var(--chart-7)",
+    keywords: ["business", "entrepreneur", "entrepreneurship", "smallbusiness", "finance", "money", "investing", "crypto", "bitcoin", "fintech", "sales", "marketing", "branding", "naira", "economy", "hustle", "sidehustle"] },
+  { id: "t8", label: "Fashion & beauty", colorVar: "var(--chart-8)",
+    keywords: ["fashion", "style", "ootd", "outfit", "beauty", "makeup", "skincare", "hair", "streetwear", "model", "asoebi", "luxury", "nails"] },
+  { id: "t9", label: "Entertainment, music & culture", colorVar: "var(--chart-9)",
+    keywords: ["music", "afrobeats", "nollywood", "movie", "film", "concert", "celebrity", "comedy", "skit", "dance", "art", "artist", "bbnaija", "netflix", "meme", "viral"] },
+  { id: "t10", label: "Sports & fitness", colorVar: "var(--chart-10)",
+    keywords: ["football", "soccer", "sports", "fitness", "gym", "workout", "superfalcons", "supereagles", "premierleague", "basketball", "athlete", "running", "afcon"] },
+  { id: "t11", label: "Travel, food & lifestyle", colorVar: "var(--chart-11)",
+    keywords: ["travel", "wanderlust", "vacation", "food", "foodie", "recipe", "restaurant", "lifestyle", "home", "interior", "family", "wedding", "photography", "nature"] },
+  { id: "t12", label: "Climate & environment", colorVar: "var(--chart-12)",
+    keywords: ["climate", "climatechange", "climateaction", "sustainability", "sustainable", "environment", "flood", "recycling", "plastic", "pollution", "netzero", "ecofriendly"] },
+  { id: "t13", label: "Politics, governance & social causes", colorVar: "var(--chart-13)",
+    keywords: ["politics", "election", "government", "policy", "governance", "protest", "endsars", "activism", "humanrights", "democracy", "corruption", "community", "charity", "ngo"] },
+  { id: "t14", label: "General & emerging", colorVar: "var(--chart-14)", keywords: [] },
 ];
 
-function classifyTopic(tokens: string[], hashtags: string[]) {
-  const bag = [...tokens, ...hashtags.map((h) => h.replace("#", ""))];
-  let best = TOPICS[0]!;
+const FALLBACK = TOPICS[TOPICS.length - 1]!;
+
+/** Classify text into a topic; returns the matched terms as evidence. */
+export function classifyTopic(tokens: string[], hashtags: string[]) {
+  const tags = hashtags.map((h) => h.replace("#", "").toLowerCase());
+  let best = FALLBACK;
   let bestScore = 0;
+  let bestTerms: string[] = [];
   for (const topic of TOPICS) {
-    const score = bag.filter((t) => topic.keywords.includes(t)).length;
+    if (!topic.keywords.length) continue;
+    const terms = new Set<string>();
+    let score = 0;
+    for (const t of tokens) if (topic.keywords.includes(t)) { score += 1; terms.add(t); }
+    for (const h of tags) {
+      // Hashtags weigh double; compound tags match by keyword stem (min 4 chars).
+      const hit = topic.keywords.find((k) => h === k || (k.length >= 4 && h.includes(k)));
+      if (hit) { score += 2; terms.add(`#${h}`); }
+    }
     if (score > bestScore) {
       bestScore = score;
       best = topic;
+      bestTerms = [...terms];
     }
   }
-  const confidence = Math.min(0.97, 0.45 + bestScore * 0.11);
-  return { topic: best, confidence };
+  const confidence = bestScore ? Math.min(0.97, 0.45 + bestScore * 0.08) : 0.3;
+  return { topic: best, confidence, terms: bestTerms };
 }
 
 /* ------------------------------------------------- sentiment and emotion */
@@ -466,7 +481,7 @@ export function buildCorpus(raw: RawPost[], edges: [string, string][], isDemo = 
       return {
         id: t.id,
         label: t.label,
-        short: t.label.split(" ")[0],
+        short: t.label.split(/[ ,&]/)[0],
         count: posts.length,
         colorVar: t.colorVar,
         sentiment: posts.length
@@ -517,10 +532,12 @@ export const { ENRICHED, AUTHORS, HASHTAG_STATS, CO_OCCURRENCE, CORPUS_STATS, re
 /** Enrich an arbitrary external caption (e.g. a pasted Instagram post). */
 export function analyzeText(text: string, hashtags: string[] = []) {
   const tokens = tokenize(`${text} ${hashtags.join(" ")}`);
-  const { topic, confidence } = classifyTopic(tokens, hashtags);
+  const { topic, confidence, terms } = classifyTopic(tokens, hashtags);
   const s = scoreSentiment(text);
   return {
     topic: topic.label,
+    topicId: topic.id,
+    topicTerms: terms,
     topicConfidence: Number(confidence.toFixed(2)),
     sentiment: s.polarity,
     sentimentLabel: s.label,
