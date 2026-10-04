@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import {
   Bar,
   BarChart,
@@ -40,7 +41,11 @@ export const Route = createFileRoute("/")({
 
 function Dashboard() {
   const { AUTHORS, CORPUS_STATS, ENRICHED, HASHTAG_STATS, entityFrequency, sentimentTimeline, topicDistribution, isDemo } = useCorpus();
-  const topics = topicDistribution();
+  const [analysedTopic, setAnalysedTopic] = useState<string | null>(null);
+  const topics = topicDistribution()
+    .map((t) => (t.id === analysedTopic ? { ...t, count: t.count + 1, analysed: true } : { ...t, analysed: false }))
+    .filter((t) => t.count > 0)
+    .sort((a, b) => b.count - a.count);
   const timeline = sentimentTimeline();
   const entities = entityFrequency(12);
   const influencers = [...AUTHORS].sort((a, b) => b.influence - a.influence).slice(0, 6);
@@ -79,11 +84,11 @@ function Dashboard() {
         )}
       </p>
 
-      <InstagramInsights />
+      <InstagramInsights onAnalysed={setAnalysedTopic} />
 
       <div className="mt-6 grid gap-5 lg:grid-cols-2">
-        <Panel title="Topic distribution" hint="BERTopic surrogate">
-          <ResponsiveContainer width="100%" height={260}>
+        <Panel title="Topic distribution" hint={analysedTopic ? "Includes analysed post" : "BERTopic surrogate"}>
+          <ResponsiveContainer width="100%" height={Math.max(180, topics.length * 34)}>
             <BarChart data={topics} layout="vertical" margin={{ left: 8, right: 16 }}>
               <CartesianGrid horizontal={false} stroke="var(--rule)" />
               <XAxis type="number" stroke="var(--muted-foreground)" fontSize={11} />
@@ -105,7 +110,12 @@ function Dashboard() {
               />
               <Bar dataKey="count" radius={[0, 2, 2, 0]}>
                 {topics.map((t) => (
-                  <Cell key={t.id} fill={t.colorVar} />
+                  <Cell
+                    key={t.id}
+                    fill={t.colorVar}
+                    stroke={t.analysed ? "var(--foreground)" : undefined}
+                    strokeWidth={t.analysed ? 2 : 0}
+                  />
                 ))}
               </Bar>
             </BarChart>
@@ -118,7 +128,12 @@ function Dashboard() {
                     className="inline-block size-2.5 rounded-[2px]"
                     style={{ background: t.colorVar }}
                   />
-                  {t.label}
+                  <span className={t.analysed ? "font-semibold" : ""}>{t.label}</span>
+                  {t.analysed ? (
+                    <span className="rounded-sm bg-accent px-1.5 py-0.5 text-[10px] font-medium text-accent-foreground">
+                      Analysed post
+                    </span>
+                  ) : null}
                 </span>
                 <SentimentPill value={t.sentiment} />
               </li>
