@@ -2,12 +2,12 @@ import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
 const NAV = [
-  { to: "/", label: "Dashboard", note: "Layer 4" },
-  { to: "/corpus", label: "Corpus & metadata", note: "Layer 1–2" },
-  { to: "/network", label: "Network analysis", note: "Layer 2" },
-  { to: "/ask", label: "Generative query", note: "Layer 3" },
-  { to: "/my-corpus", label: "My corpus", note: "Saved" },
-  { to: "/architecture", label: "Architecture", note: "Ch. 3" },
+  { to: "/", label: "Dashboard" },
+  { to: "/corpus", label: "Corpus & metadata" },
+  { to: "/network", label: "Network analysis" },
+  { to: "/ask", label: "Generative query" },
+  { to: "/my-corpus", label: "My corpus" },
+  { to: "/architecture", label: "Architecture" },
 ] as const;
 
 export function Shell({
@@ -42,9 +42,6 @@ export function Shell({
                 activeOptions={{ exact: item.to === "/" }}
               >
                 {item.label}
-                <span className="ml-2 font-mono text-[10px] uppercase tracking-wider opacity-50">
-                  {item.note}
-                </span>
               </Link>
             ))}
           </div>
