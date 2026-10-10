@@ -13,8 +13,12 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ArchitectureRouteImport } from './routes/architecture'
 import { Route as AskRouteImport } from './routes/ask'
 import { Route as CorpusRouteImport } from './routes/corpus'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as MyCorpusRouteImport } from './routes/my-corpus'
 import { Route as NetworkRouteImport } from './routes/network'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -36,6 +40,16 @@ const CorpusRoute = CorpusRouteImport.update({
   path: '/corpus',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MyCorpusRoute = MyCorpusRouteImport.update({
   id: '/my-corpus',
   path: '/my-corpus',
@@ -46,22 +60,41 @@ const NetworkRoute = NetworkRouteImport.update({
   path: '/network',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/architecture': typeof ArchitectureRoute
   '/ask': typeof AskRoute
   '/corpus': typeof CorpusRoute
+  '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/my-corpus': typeof MyCorpusRoute
   '/network': typeof NetworkRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/architecture': typeof ArchitectureRoute
   '/ask': typeof AskRoute
   '/corpus': typeof CorpusRoute
+  '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/my-corpus': typeof MyCorpusRoute
   '/network': typeof NetworkRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -69,23 +102,50 @@ export interface FileRoutesById {
   '/architecture': typeof ArchitectureRoute
   '/ask': typeof AskRoute
   '/corpus': typeof CorpusRoute
+  '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/my-corpus': typeof MyCorpusRoute
   '/network': typeof NetworkRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/architecture' | '/ask' | '/corpus' | '/my-corpus' | '/network'
+    | '/'
+    | '/architecture'
+    | '/ask'
+    | '/corpus'
+    | '/login'
+    | '/mcp'
+    | '/my-corpus'
+    | '/network'
+    | '/.well-known/oauth-protected-resource'
+    | '/.lovable/oauth/consent'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/architecture' | '/ask' | '/corpus' | '/my-corpus' | '/network'
+  to:
+    | '/'
+    | '/architecture'
+    | '/ask'
+    | '/corpus'
+    | '/login'
+    | '/mcp'
+    | '/my-corpus'
+    | '/network'
+    | '/.well-known/oauth-protected-resource'
+    | '/.lovable/oauth/consent'
   id:
     | '__root__'
     | '/'
     | '/architecture'
     | '/ask'
     | '/corpus'
+    | '/login'
+    | '/mcp'
     | '/my-corpus'
     | '/network'
+    | '/.well-known/oauth-protected-resource'
+    | '/.lovable/oauth/consent'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -93,8 +153,12 @@ export interface RootRouteChildren {
   ArchitectureRoute: typeof ArchitectureRoute
   AskRoute: typeof AskRoute
   CorpusRoute: typeof CorpusRoute
+  LoginRoute: typeof LoginRoute
+  McpRoute: typeof McpRoute
   MyCorpusRoute: typeof MyCorpusRoute
   NetworkRoute: typeof NetworkRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -127,6 +191,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CorpusRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/my-corpus': {
       id: '/my-corpus'
       path: '/my-corpus'
@@ -141,6 +219,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NetworkRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -149,8 +241,13 @@ const rootRouteChildren: RootRouteChildren = {
   ArchitectureRoute: ArchitectureRoute,
   AskRoute: AskRoute,
   CorpusRoute: CorpusRoute,
+  LoginRoute: LoginRoute,
+  McpRoute: McpRoute,
   MyCorpusRoute: MyCorpusRoute,
   NetworkRoute: NetworkRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

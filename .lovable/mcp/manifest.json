@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "sdk_version": "3.0.5",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://jnvnzxndebwqkejrmagy.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "aura-insight",
+      "version": "0.1.0",
+      "title": "Aura Insight"
+    },
+    "tools": [
+      {
+        "name": "search_corpus",
+        "title": "Search saved corpus",
+        "description": "Search the shared corpus of saved Instagram posts by keyword, hashtag, account or topic, returning metadata and enrichment.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "maxLength": 200,
+              "description": "Text to find in captions, e.g. 'solar' or '#ootd'."
+            },
+            "author": {
+              "type": "string",
+              "maxLength": 100,
+              "description": "Account handle, e.g. '@brand'."
+            },
+            "topic": {
+              "type": "string",
+              "maxLength": 100,
+              "description": "Topic label fragment, e.g. 'Fashion'."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "description": "Maximum posts to return."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "corpus_overview",
+        "title": "Corpus overview",
+        "description": "Summarise the shared corpus: post count, accounts, topic distribution with average sentiment, and top hashtags.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "analyze_post_text",
+        "title": "Analyse post text",
+        "description": "Classify an Instagram caption into a topic and score its sentiment, emotion and named entities using the app's enrichment engine.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "caption": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 3000,
+              "description": "Caption and optionally comments."
+            },
+            "hashtags": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 100
+              },
+              "maxItems": 60,
+              "default": [],
+              "description": "Hashtags, e.g. ['#ootd']."
+            }
+          },
+          "required": [
+            "caption"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
