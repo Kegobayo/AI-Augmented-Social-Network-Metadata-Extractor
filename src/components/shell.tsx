@@ -42,9 +42,6 @@ export function Shell({
                 activeOptions={{ exact: item.to === "/" }}
               >
                 {item.label}
-                <span className="ml-2 font-mono text-[10px] uppercase tracking-wider opacity-50">
-                  {item.note}
-                </span>
               </Link>
             ))}
           </div>
