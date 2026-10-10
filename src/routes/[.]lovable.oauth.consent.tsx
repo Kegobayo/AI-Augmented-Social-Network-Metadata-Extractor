@@ -14,7 +14,7 @@ export const Route = createFileRoute("/.lovable/oauth/consent")({
   // SSR has no localStorage session and would redirect signed-in users.
   ssr: false,
   validateSearch: (s: Record<string, unknown>) => ({
-    authorization_id: typeof s.authorization_id === "string" ? s.authorization_id : "",
+    authorization_id: typeof s["authorization_id"] === "string" ? s["authorization_id"] : "",
   }),
   beforeLoad: async ({ search, location }) => {
     if (!search.authorization_id) throw new Error("This link is missing its authorization request. Start the connection again from your assistant.");

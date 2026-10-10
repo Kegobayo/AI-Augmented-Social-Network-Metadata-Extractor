@@ -8,7 +8,7 @@ import { oauthReturnPath } from "@/lib/oauth-return-path";
 
 /** Sign-in used only when connecting an AI assistant. The app itself stays open. */
 export const Route = createFileRoute("/login")({
-  validateSearch: (s: Record<string, unknown>) => ({ next: oauthReturnPath(s.next) }),
+  validateSearch: (s: Record<string, unknown>) => ({ next: oauthReturnPath(s["next"]) }),
   head: () => ({
     meta: [
       { title: "Connect an assistant | Aura Insight" },
