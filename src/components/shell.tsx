@@ -2,12 +2,12 @@ import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
 const NAV = [
-  { to: "/" },
-  { to: "/corpus" },
-  { to: "/network" },
-  { to: "/ask" },
-  { to: "/my-corpus" },
-  { to: "/architecture" },
+  { to: "/", label: "Dashboard" },
+  { to: "/corpus", label: "Corpus & metadata" },
+  { to: "/network", label: "Network analysis" },
+  { to: "/ask", label: "Generative query" },
+  { to: "/my-corpus", label: "My corpus" },
+  { to: "/architecture", label: "Architecture" },
 ] as const;
 
 export function Shell({
