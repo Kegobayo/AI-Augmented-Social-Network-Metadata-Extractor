@@ -1,4 +1,4 @@
-# Aura Insight
+# AI-AUGMENTED-SOCIAL-NETWORK-METADATA-EXTRACTOR
 
 Build an AI-AUGMENTED SOCIAL NETWORK METADATA EXTRACTOR APPLICATION FOR GENERATIVE KNOWLEDGE MANAGEMENT according to the specifications embedded in the attached document. This project is a final-year project to achieve a master's in information technology.
 
