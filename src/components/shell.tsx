@@ -21,9 +21,9 @@ export function Shell({
 }) {
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-rule bg-card">
+      <header className="border-t-4 border-t-primary border-b border-rule bg-card">
         <div className="mx-auto max-w-[1180px] px-6 py-5">
-          <p className="label-caps">AI-Augmented Social Network Metadata Extractor</p>
+          <p className="label-caps text-primary">AI-Augmented Social Network Metadata Extractor</p>
           <h1 className="mt-1 text-2xl font-semibold text-foreground">
             Generative Knowledge Management Workbench
           </h1>
@@ -38,7 +38,7 @@ export function Shell({
               <Link
                 key={item.to}
                 to={item.to}
-                className="group border-b-2 border-transparent px-3 py-3 text-sm text-muted-foreground transition-colors hover:text-foreground data-[status=active]:border-primary data-[status=active]:font-medium data-[status=active]:text-foreground"
+                className="group border-b-2 border-transparent px-3 py-3 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground data-[status=active]:border-primary data-[status=active]:bg-primary-subtle data-[status=active]:font-semibold data-[status=active]:text-primary"
                 activeOptions={{ exact: item.to === "/" }}
               >
                 {item.label}
@@ -49,7 +49,7 @@ export function Shell({
       </header>
 
       <main className="mx-auto max-w-[1180px] px-6 py-8">
-        <div className="mb-6 border-l-2 border-accent pl-4">
+        <div className="mb-6 border-l-4 border-accent pl-4">
           <h2 className="text-xl font-semibold text-foreground">{title}</h2>
           <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
         </div>
@@ -80,7 +80,7 @@ export function Panel({
   return (
     <section className={`paper-panel p-5 ${className}`}>
       <div className="mb-4 flex items-baseline justify-between gap-3">
-        <h3 className="text-base font-semibold text-foreground">{title}</h3>
+        <h3 className="text-base font-semibold text-primary">{title}</h3>
         {hint ? <span className="label-caps">{hint}</span> : null}
       </div>
       {children}
@@ -90,7 +90,7 @@ export function Panel({
 
 export function Stat({ value, label }: { value: string | number; label: string }) {
   return (
-    <div className="paper-panel px-4 py-3">
+    <div className="paper-panel metric-panel px-4 py-3">
       <div className="font-serif text-2xl font-semibold text-foreground">{value}</div>
       <div className="label-caps mt-1">{label}</div>
     </div>
