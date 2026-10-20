@@ -88,7 +88,7 @@ function Architecture() {
             <tbody>
               {FACETS.map(([q, d]) => (
                 <tr key={q} className="border-b border-rule/60 last:border-0 align-top">
-                  <td className="w-20 py-2 font-serif text-base font-semibold text-foreground">
+                  <td className="w-20 py-2 text-base font-semibold text-foreground">
                     {q}
                   </td>
                   <td className="py-2 text-muted-foreground">{d}</td>

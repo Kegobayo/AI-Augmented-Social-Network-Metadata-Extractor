@@ -11,7 +11,7 @@ function renderMarkdown(md: string) {
   return md.split("\n").map((line, i) => {
     if (line.startsWith("## "))
       return (
-        <h4 key={i} className="mt-4 mb-1 font-serif text-base font-semibold text-foreground">
+        <h4 key={i} className="mt-4 mb-1 text-base font-semibold text-foreground">
           {line.slice(3)}
         </h4>
       );
@@ -101,12 +101,12 @@ export function InstagramInsights({ onAnalysed }: { onAnalysed?: (topicId: strin
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://www.instagram.com/p/…"
-            className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
+            className="h-10 flex-1 rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring/40"
           />
           <button
             type="submit"
             disabled={loading}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+            className="inline-flex h-10 items-center rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover disabled:opacity-60"
           >
             {loading ? "Analysing…" : "Get insights"}
           </button>
@@ -117,7 +117,7 @@ export function InstagramInsights({ onAnalysed }: { onAnalysed?: (topicId: strin
             onChange={(e) => setCaption(e.target.value)}
             rows={4}
             placeholder="Paste the post caption and a few comments here"
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
+            className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring/40"
           />
         ) : (
           <button
@@ -187,7 +187,7 @@ export function InstagramInsights({ onAnalysed }: { onAnalysed?: (topicId: strin
             <p className="line-clamp-6 text-xs text-muted-foreground">{result.caption}</p>
                           <button
                 onClick={doSave}
-                className="w-full rounded-md border border-primary px-3 py-1.5 text-sm font-medium text-primary hover:bg-secondary"
+                className="inline-flex h-10 w-full items-center justify-center rounded-xl border border-primary px-3 text-sm font-medium text-primary transition-colors hover:bg-secondary"
               >
                 Save to my corpus
               </button>

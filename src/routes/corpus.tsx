@@ -51,19 +51,19 @@ function Corpus() {
   return (
     <Shell
       title="Post gallery and metadata inspector"
-      subtitle="Layer 1 ingestion output alongside the Layer 2 enrichment record for each post."
+      subtitle="Every post in the corpus with its full metadata record — caption, hashtags, engagement and AI enrichment."
     >
       <div className="mb-5 flex flex-wrap items-center gap-3">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Filter by caption, account, hashtag or location…"
-          className="min-w-64 flex-1 rounded-sm border border-input bg-card px-3 py-2 text-sm outline-none focus:border-ring"
+          className="h-10 min-w-64 flex-1 rounded-xl border border-input bg-card px-3 text-sm outline-none focus:border-ring"
         />
         <select
           value={topicId}
           onChange={(e) => setTopicId(e.target.value)}
-          className="rounded-sm border border-input bg-card px-3 py-2 text-sm outline-none focus:border-ring"
+          className="h-10 rounded-xl border border-input bg-card px-3 text-sm outline-none focus:border-ring"
         >
           <option value="all">All topics</option>
           {TOPICS.map((t) => (
@@ -96,7 +96,7 @@ function Corpus() {
               <p className="mt-2 line-clamp-2 text-sm text-foreground">{p.caption}</p>
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
                 <span
-                  className="rounded-[2px] px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground"
+                  className="rounded-md px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground"
                   style={{ background: p.topic.colorVar }}
                 >
                   {p.topic.label}
@@ -185,7 +185,7 @@ function MetadataRecord({ post }: { post: EnrichedPost }) {
                 {post.entities.map((e) => (
                   <span
                     key={e.text}
-                    className="rounded-sm border border-border bg-secondary px-1.5 py-0.5 text-xs"
+                    className="rounded-md border border-border bg-secondary px-1.5 py-0.5 text-xs"
                   >
                     {e.text}
                     <span className="ml-1 font-mono text-[10px] text-muted-foreground">

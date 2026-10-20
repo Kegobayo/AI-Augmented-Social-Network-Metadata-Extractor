@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import type { User } from "@supabase/supabase-js";
 
 import { supabase } from "@/integrations/supabase/client";
-import type { RawPost } from "@/data/corpus";
+import { FOLLOW_EDGES, RAW_POSTS, type RawPost } from "@/data/corpus";
 import { buildCorpus, DEMO_CORPUS, type Corpus } from "@/lib/enrichment";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -48,6 +48,22 @@ function mentionEdges(rows: SavedRow[]): [string, string][] {
   return [...set].map((k) => k.split("|") as [string, string]);
 }
 
+/**
+ * Keep the most recent `days` of posts, measured back from the newest post in
+ * the set (not wall-clock now, so the historical demo corpus stays filterable).
+ * Falls back to the unfiltered set when a range would leave too little data
+ * for the charts and tables to render.
+ */
+function withinDays<T>(items: T[], days: number | null, ts: (item: T) => string): T[] {
+  if (!days || items.length === 0) return items;
+  const max = Math.max(...items.map((i) => Date.parse(ts(i))));
+  const cutoff = max - days * 86_400_000;
+  const filtered = items.filter((i) => Date.parse(ts(i)) >= cutoff);
+  return filtered.length >= 3 ? filtered : items;
+}
+
+export type CorpusSource = "auto" | "demo" | "saved";
+
 type Ctx = {
   corpus: Corpus;
   user: User | null;
@@ -55,6 +71,10 @@ type Ctx = {
   saved: SavedRow[];
   loading: boolean;
   refresh: () => Promise<void>;
+  source: CorpusSource;
+  setSource: (s: CorpusSource) => void;
+  days: number | null;
+  setDays: (d: number | null) => void;
 };
 
 const CorpusContext = createContext<Ctx>({
@@ -64,6 +84,10 @@ const CorpusContext = createContext<Ctx>({
   saved: [],
   loading: false,
   refresh: async () => {},
+  source: "auto",
+  setSource: () => {},
+  days: null,
+  setDays: () => {},
 });
 
 export function CorpusProvider({ children }: { children: ReactNode }) {
@@ -71,6 +95,8 @@ export function CorpusProvider({ children }: { children: ReactNode }) {
   const [authReady, setAuthReady] = useState(false);
   const [saved, setSaved] = useState<SavedRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [source, setSource] = useState<CorpusSource>("auto");
+  const [days, setDays] = useState<number | null>(null);
 
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((_e, session) => {
@@ -100,13 +126,20 @@ export function CorpusProvider({ children }: { children: ReactNode }) {
     void refresh();
   }, [refresh]);
 
-  const corpus = useMemo(
-    () => (saved.length ? buildCorpus(saved.map(rowToRaw), mentionEdges(saved)) : DEMO_CORPUS),
-    [saved],
-  );
+  const rangedSaved = useMemo(() => withinDays(saved, days, (r) => r.posted_at), [saved, days]);
+  const rangedRaw = useMemo(() => withinDays(RAW_POSTS, days, (p) => p.timestamp), [days]);
+
+  const corpus = useMemo(() => {
+    if (source !== "demo" && rangedSaved.length) {
+      return buildCorpus(rangedSaved.map(rowToRaw), mentionEdges(rangedSaved));
+    }
+    return buildCorpus(rangedRaw, FOLLOW_EDGES, true);
+  }, [source, rangedSaved, rangedRaw]);
 
   return (
-    <CorpusContext.Provider value={{ corpus, user, authReady, saved, loading, refresh }}>
+    <CorpusContext.Provider
+      value={{ corpus, user, authReady, saved, loading, refresh, source, setSource, days, setDays }}
+    >
       {children}
     </CorpusContext.Provider>
   );
