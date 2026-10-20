@@ -91,13 +91,13 @@ function Ask() {
           onChange={(e) => setQuestion(e.target.value)}
           rows={3}
           placeholder="e.g. What are the main concerns about renewable energy discussed by influencers in this dataset?"
-          className="mt-2 w-full resize-y rounded-sm border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring"
+          className="mt-2 w-full resize-y rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring"
         />
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <select
             value={mode}
             onChange={(e) => setMode(e.target.value as "answer" | "brief")}
-            className="rounded-sm border border-input bg-card px-3 py-2 text-sm outline-none focus:border-ring"
+            className="h-10 rounded-xl border border-input bg-card px-3 text-sm outline-none focus:border-ring"
           >
             <option value="answer">Cited answer</option>
             <option value="brief">Structured decision brief</option>
@@ -105,7 +105,7 @@ function Ask() {
           <button
             type="submit"
             disabled={loading || question.trim().length < 3}
-            className="rounded-sm bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="inline-flex h-10 items-center rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover disabled:opacity-50"
           >
             {loading ? "Synthesising…" : "Retrieve and synthesise"}
           </button>
@@ -120,7 +120,7 @@ function Ask() {
                 setQuestion(s);
                 void run(s);
               }}
-              className="rounded-sm border border-border bg-secondary px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+              className="rounded-full border border-border bg-secondary px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
             >
               {s}
             </button>
@@ -146,7 +146,7 @@ function Ask() {
             <div className="space-y-3 text-sm leading-relaxed text-foreground">
               {answer.split("\n").filter(Boolean).map((line, i) =>
                 line.startsWith("##") ? (
-                  <h4 key={i} className="pt-2 font-serif text-base font-semibold">
+                  <h4 key={i} className="pt-2 text-base font-semibold">
                     {line.replace(/^#+\s*/, "")}
                   </h4>
                 ) : (
