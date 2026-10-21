@@ -64,7 +64,7 @@ const FACETS = [
 function Architecture() {
   return (
     <Shell
-      title="System architecture and methodology mapping"
+      title="How it works"
       subtitle="How the running application implements the four-phase design proposed in Chapter Three."
     >
       <div className="space-y-4">
