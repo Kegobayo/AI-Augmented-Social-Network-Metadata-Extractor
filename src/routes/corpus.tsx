@@ -50,7 +50,7 @@ function Corpus() {
 
   return (
     <Shell
-      title="Post gallery and metadata inspector"
+      title="Corpus"
       subtitle="Every post in the corpus with its full metadata record — caption, hashtags, engagement and AI enrichment."
     >
       <div className="mb-5 flex flex-wrap items-center gap-3">
