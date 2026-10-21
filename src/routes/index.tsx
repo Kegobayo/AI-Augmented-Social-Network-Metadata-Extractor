@@ -55,7 +55,7 @@ function Dashboard() {
 
   return (
     <Shell
-      title="Dynamic knowledge dashboard"
+      title="Overview"
       subtitle={`${CORPUS_STATS.posts} enriched posts from ${CORPUS_STATS.authors} accounts, ${CORPUS_STATS.span.from} to ${CORPUS_STATS.span.to}.`}
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-6 lg:gap-6">

@@ -54,7 +54,7 @@ function Network() {
 
   return (
     <Shell
-      title="Social network analysis"
+      title="Network"
       subtitle="Who influences whom: the follower graph, detected communities, influence ranking and hashtag reach."
     >
       <div className="grid gap-5 lg:grid-cols-[1.1fr_1fr]">
