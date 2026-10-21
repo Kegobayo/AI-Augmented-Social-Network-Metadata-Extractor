@@ -55,7 +55,7 @@ function Network() {
   return (
     <Shell
       title="Social network analysis"
-      subtitle="Relational metadata rendered as nodes and ties: follower graph, detected communities, influence ranking and hashtag co-occurrence."
+      subtitle="Who influences whom: the follower graph, detected communities, influence ranking and hashtag reach."
     >
       <div className="grid gap-5 lg:grid-cols-[1.1fr_1fr]">
         <Panel title="Follower graph" hint="Label propagation communities">
