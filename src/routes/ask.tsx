@@ -35,6 +35,25 @@ const SUGGESTIONS = [
   "What does the corpus suggest about the link between energy access and health outcomes?",
 ];
 
+/** Render inline markdown (bold, italic) so model emphasis marks never show as literal asterisks. */
+function renderInline(text: string, prefix = "") {
+  const boldParts = text.split(/(\*\*[^*]+\*\*)/g);
+  return boldParts.map((part, i) => {
+    const key = `${prefix}b${i}`;
+    if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
+      return <strong key={key}>{part.slice(2, -2)}</strong>;
+    }
+    const italicParts = part.split(/(\*[^*\s][^*]*\*)/g);
+    return italicParts.map((seg, j) => {
+      const k = `${key}-${j}`;
+      if (seg.length > 2 && seg.startsWith("*") && seg.endsWith("*")) {
+        return <em key={k}>{seg.slice(1, -1)}</em>;
+      }
+      return <span key={k}>{seg}</span>;
+    });
+  });
+}
+
 function Ask() {
   const { retrieve } = useCorpus();
   const ask = useServerFn(askKnowledgeBase);
@@ -150,7 +169,9 @@ function Ask() {
                     {line.replace(/^#+\s*/, "")}
                   </h4>
                 ) : (
-                  <p key={i}>{line.replace(/^[-*]\s*/, "• ")}</p>
+                  <p key={i}>
+                    {renderInline(line.replace(/^[-*]\s+/, "• "))}
+                  </p>
                 ),
               )}
             </div>
