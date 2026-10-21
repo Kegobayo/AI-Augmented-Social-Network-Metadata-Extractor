@@ -150,7 +150,9 @@ function Ask() {
                     {line.replace(/^#+\s*/, "")}
                   </h4>
                 ) : (
-                  <p key={i}>{line.replace(/^[-*]\s*/, "• ")}</p>
+                  <p key={i}>
+                    {renderInline(line.replace(/^[-*]\s+/, "• "))}
+                  </p>
                 ),
               )}
             </div>
