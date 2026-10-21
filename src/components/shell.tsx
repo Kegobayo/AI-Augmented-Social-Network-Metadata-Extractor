@@ -35,7 +35,7 @@ const NAV = [
     group: "Explore",
     items: [
       { to: "/", label: "Overview", icon: LayoutDashboard },
-      { to: "/ask", label: "Ask your data", icon: Sparkles, badge: "AI" },
+      { to: "/ask", label: "Ask your data", icon: Sparkles },
       { to: "/network", label: "Network", icon: Share2 },
       { to: "/corpus", label: "Corpus", icon: Database },
     ],
@@ -121,11 +121,6 @@ function AppSidebar() {
                           <span>{item.label}</span>
                         </Link>
                       </SidebarMenuButton>
-                      {"badge" in item && item.badge ? (
-                        <SidebarMenuBadge className="rounded-md bg-primary px-1.5 text-[10px] font-semibold text-primary-foreground">
-                          {item.badge}
-                        </SidebarMenuBadge>
-                      ) : null}
                     </SidebarMenuItem>
                   );
                 })}
