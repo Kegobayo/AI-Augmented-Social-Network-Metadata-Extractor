@@ -1,14 +1,186 @@
-import { Link } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { Link, useRouterState } from "@tanstack/react-router";
+import {
+  Database,
+  FolderOpen,
+  Info,
+  LayoutDashboard,
+  Moon,
+  Share2,
+  Sparkles,
+  Sun,
+  Upload,
+} from "lucide-react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+  useSidebar,
+} from "@/components/ui/sidebar";
+import { useCorpusState } from "@/lib/corpus-context";
 
 const NAV = [
-  { to: "/", label: "Dashboard", note: "Layer 4" },
-  { to: "/corpus", label: "Corpus & metadata", note: "Layer 1–2" },
-  { to: "/network", label: "Network analysis", note: "Layer 2" },
-  { to: "/ask", label: "Generative query", note: "Layer 3" },
-  { to: "/my-corpus", label: "My corpus", note: "Saved" },
-  { to: "/architecture", label: "Architecture", note: "Ch. 3" },
+  {
+    group: "Explore",
+    items: [
+      { to: "/", label: "Overview", icon: LayoutDashboard },
+      { to: "/ask", label: "Ask your data", icon: Sparkles },
+      { to: "/network", label: "Network", icon: Share2 },
+      { to: "/corpus", label: "Corpus", icon: Database },
+    ],
+  },
+  {
+    group: "Workspace",
+    items: [{ to: "/my-corpus", label: "My corpus", icon: FolderOpen }],
+  },
+  {
+    group: "About",
+    items: [{ to: "/architecture", label: "How it works", icon: Info }],
+  },
 ] as const;
+
+function ThemeToggle() {
+  const [dark, setDark] = useState(false);
+  useEffect(() => {
+    setDark(document.documentElement.classList.contains("dark"));
+  }, []);
+  return (
+    <button
+      type="button"
+      aria-label="Toggle light and dark mode"
+      onClick={() => {
+        const next = !dark;
+        setDark(next);
+        document.documentElement.classList.toggle("dark", next);
+        try {
+          localStorage.setItem("theme", next ? "dark" : "light");
+        } catch {
+          /* private mode */
+        }
+      }}
+      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:text-foreground"
+    >
+      {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+    </button>
+  );
+}
+
+function AppSidebar() {
+  const { state } = useSidebar();
+  const collapsed = state === "collapsed";
+  const currentPath = useRouterState({ select: (r) => r.location.pathname });
+
+  return (
+    <Sidebar collapsible="icon">
+      <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
+        <Link to="/" className="flex min-w-0 items-center gap-2.5">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
+            <Sparkles className="h-4.5 w-4.5" />
+          </span>
+          {!collapsed && (
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-semibold text-foreground">
+                Aura Insight
+              </span>
+              <span className="block truncate text-xs text-muted-foreground">
+                Instagram metadata, answered
+              </span>
+            </span>
+          )}
+        </Link>
+      </SidebarHeader>
+      <SidebarContent>
+        {NAV.map((section) => (
+          <SidebarGroup key={section.group}>
+            <SidebarGroupLabel>{section.group}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {section.items.map((item) => {
+                  const active =
+                    item.to === "/" ? currentPath === "/" : currentPath.startsWith(item.to);
+                  return (
+                    <SidebarMenuItem key={item.to}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={active}
+                        className="data-[active=true]:bg-primary-subtle data-[active=true]:font-medium data-[active=true]:text-primary"
+                      >
+                        <Link to={item.to}>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
+      </SidebarContent>
+    </Sidebar>
+  );
+}
+
+function TopBar({ title }: { title: string }) {
+  const currentPath = useRouterState({ select: (r) => r.location.pathname });
+  const { source, setSource, days, setDays, saved } = useCorpusState();
+  const section = NAV.find((g) =>
+    g.items.some((i) => (i.to === "/" ? currentPath === "/" : currentPath.startsWith(i.to))),
+  );
+  const hasSaved = saved.length > 0;
+
+  return (
+    <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur lg:px-6">
+      <SidebarTrigger className="shrink-0" />
+      <div className="min-w-0">
+        <p className="label-caps hidden sm:block">{section?.group ?? "Explore"}</p>
+        <h1 className="truncate text-base font-semibold text-foreground">{title}</h1>
+      </div>
+      <div className="ml-auto flex shrink-0 items-center gap-2">
+        <select
+          aria-label="Corpus"
+          value={source === "demo" || !hasSaved ? "demo" : "saved"}
+          onChange={(e) => setSource(e.target.value === "demo" ? "demo" : "saved")}
+          className="hidden h-10 rounded-xl border border-border bg-card px-3 text-sm text-foreground outline-none focus:border-ring md:block"
+        >
+          <option value="demo">Demo corpus</option>
+          <option value="saved" disabled={!hasSaved}>
+            My corpus{hasSaved ? ` (${saved.length})` : ""}
+          </option>
+        </select>
+        <select
+          aria-label="Date range"
+          value={days ?? "all"}
+          onChange={(e) => setDays(e.target.value === "all" ? null : Number(e.target.value))}
+          className="hidden h-10 rounded-xl border border-border bg-card px-3 text-sm text-foreground outline-none focus:border-ring lg:block"
+        >
+          <option value="all">All time</option>
+          <option value="30">Last 30 days</option>
+          <option value="7">Last 7 days</option>
+        </select>
+        <ThemeToggle />
+        <Link
+          to="/my-corpus"
+          className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
+        >
+          <Upload className="h-4 w-4" />
+          <span className="hidden sm:inline">Import posts</span>
+        </Link>
+      </div>
+    </header>
+  );
+}
 
 export function Shell({
   title,
@@ -20,52 +192,19 @@ export function Shell({
   children: ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-rule bg-card">
-        <div className="mx-auto max-w-[1180px] px-6 py-5">
-          <p className="label-caps">AI-Augmented Social Network Metadata Extractor</p>
-          <h1 className="mt-1 text-2xl font-semibold text-foreground">
-            Generative Knowledge Management Workbench
-          </h1>
-          <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            MSc Information Technology research prototype — Instagram metadata extraction, semantic
-            enrichment and retrieval-augmented synthesis for decision support.
-          </p>
-        </div>
-        <nav className="border-t border-rule">
-          <div className="mx-auto flex max-w-[1180px] flex-wrap gap-1 px-6">
-            {NAV.map((item) => (
-              <Link
-                key={item.to}
-                to={item.to}
-                className="group border-b-2 border-transparent px-3 py-3 text-sm text-muted-foreground transition-colors hover:text-foreground data-[status=active]:border-primary data-[status=active]:font-medium data-[status=active]:text-foreground"
-                activeOptions={{ exact: item.to === "/" }}
-              >
-                {item.label}
-                <span className="ml-2 font-mono text-[10px] uppercase tracking-wider opacity-50">
-                  {item.note}
-                </span>
-              </Link>
-            ))}
+    <SidebarProvider style={{ "--sidebar-width": "260px" } as CSSProperties}>
+      <AppSidebar />
+      <SidebarInset>
+        <TopBar title={title} />
+        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-[1200px] animate-fade-up">
+            <h2 className="text-[28px] font-bold tracking-tight text-foreground">{title}</h2>
+            <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{subtitle}</p>
+            <div className="mt-6">{children}</div>
           </div>
-        </nav>
-      </header>
-
-      <main className="mx-auto max-w-[1180px] px-6 py-8">
-        <div className="mb-6 border-l-2 border-accent pl-4">
-          <h2 className="text-xl font-semibold text-foreground">{title}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
-        </div>
-        {children}
-      </main>
-
-      <footer className="mt-12 border-t border-rule py-6">
-        <div className="mx-auto max-w-[1180px] px-6 text-xs text-muted-foreground">
-          Demonstration corpus of anonymised Instagram metadata. Enrichment runs deterministically in
-          the browser; the generative layer calls a hosted language model.
-        </div>
-      </footer>
-    </div>
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
 
@@ -81,7 +220,7 @@ export function Panel({
   className?: string;
 }) {
   return (
-    <section className={`paper-panel p-5 ${className}`}>
+    <section className={`paper-panel p-6 ${className}`}>
       <div className="mb-4 flex items-baseline justify-between gap-3">
         <h3 className="text-base font-semibold text-foreground">{title}</h3>
         {hint ? <span className="label-caps">{hint}</span> : null}
@@ -93,9 +232,11 @@ export function Panel({
 
 export function Stat({ value, label }: { value: string | number; label: string }) {
   return (
-    <div className="paper-panel px-4 py-3">
-      <div className="font-serif text-2xl font-semibold text-foreground">{value}</div>
-      <div className="label-caps mt-1">{label}</div>
+    <div className="paper-panel px-5 py-4">
+      <div className="text-[28px] font-bold leading-8 tracking-tight text-foreground [font-variant-numeric:tabular-nums]">
+        {value}
+      </div>
+      <div className="label-caps mt-1.5">{label}</div>
     </div>
   );
 }
@@ -110,4 +251,3 @@ export function SentimentPill({ value }: { value: number }) {
     </span>
   );
 }
-

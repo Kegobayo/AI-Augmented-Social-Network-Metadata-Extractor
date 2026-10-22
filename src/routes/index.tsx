@@ -55,10 +55,10 @@ function Dashboard() {
 
   return (
     <Shell
-      title="Dynamic knowledge dashboard"
+      title="Overview"
       subtitle={`${CORPUS_STATS.posts} enriched posts from ${CORPUS_STATS.authors} accounts, ${CORPUS_STATS.span.from} to ${CORPUS_STATS.span.to}.`}
     >
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-6">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-6 lg:gap-6">
         <Stat value={CORPUS_STATS.posts} label="Posts ingested" />
         <Stat value={CORPUS_STATS.authors} label="Accounts" />
         <Stat value={CORPUS_STATS.ties} label="Follower ties" />
@@ -86,8 +86,8 @@ function Dashboard() {
 
       <InstagramInsights onAnalysed={setAnalysedTopic} />
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-2">
-        <Panel title="Topic distribution" hint={analysedTopic ? "Includes analysed post" : "BERTopic surrogate"}>
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <Panel title="Topic distribution" hint={analysedTopic ? "Includes analysed post" : "By theme"}>
           <ResponsiveContainer width="100%" height={Math.max(180, topics.length * 34)}>
             <BarChart data={topics} layout="vertical" margin={{ left: 8, right: 16 }}>
               <CartesianGrid horizontal={false} stroke="var(--rule)" />
@@ -141,7 +141,7 @@ function Dashboard() {
           </ul>
         </Panel>
 
-        <Panel title="Sentiment trend across the collection window" hint="RoBERTa surrogate">
+        <Panel title="Sentiment trend across the collection window" hint="Weekly mean">
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={timeline} margin={{ left: -16, right: 12, top: 8 }}>
               <CartesianGrid stroke="var(--rule)" />
@@ -202,12 +202,12 @@ function Dashboard() {
           </Link>
         </Panel>
 
-        <Panel title="Extracted entities by frequency" hint="NER surrogate">
+        <Panel title="Extracted entities by frequency" hint="Top mentions">
           <div className="flex flex-wrap gap-2">
             {entities.map((e) => (
               <span
                 key={e.text}
-                className="rounded-sm border border-border bg-secondary px-2 py-1 text-xs"
+                className="rounded-md border border-border bg-secondary px-2 py-1 text-xs"
               >
                 <span className="font-medium text-foreground">{e.text}</span>
                 <span className="ml-1.5 font-mono text-[10px] text-muted-foreground">
@@ -232,7 +232,7 @@ function Dashboard() {
         </Panel>
       </div>
 
-      <Panel className="mt-5" title="Highest engagement rate (interactions ÷ followers)" hint="Layer 1 metrics">
+      <Panel className="mt-6" title="Highest engagement rate (interactions ÷ followers)" hint="Per follower">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-rule text-left">

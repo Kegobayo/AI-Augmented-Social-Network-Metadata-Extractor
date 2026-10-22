@@ -100,7 +100,7 @@ function MyCorpus() {
             <button
               onClick={doSync}
               disabled={busy === "sync"}
-              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+              className="inline-flex h-10 items-center rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover disabled:opacity-60"
             >
               {busy === "sync" ? "Importing…" : "Import latest 25 posts"}
             </button>
@@ -121,11 +121,11 @@ function MyCorpus() {
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
                 placeholder="IGAA…"
-                className="flex-1 rounded-md border border-input bg-background px-3 py-2 font-mono text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
+                className="h-10 flex-1 rounded-xl border border-input bg-background px-3 font-mono text-sm text-foreground outline-none focus:ring-2 focus:ring-ring/40"
               />
               <button
                 disabled={busy === "connect"}
-                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+                className="inline-flex h-10 items-center rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover disabled:opacity-60"
               >
                 {busy === "connect" ? "Checking…" : "Link account"}
               </button>
