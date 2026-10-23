@@ -240,7 +240,7 @@ function AnalyseSlideOver({
 }: {
   open: boolean;
   onClose: () => void;
-  onAnalysed?: (topicId: string | null) => void;
+  onAnalysed?: ((topicId: string | null) => void) | undefined;
 }) {
   return (
     <div className={`fixed inset-0 z-50 ${open ? "" : "pointer-events-none"}`} aria-hidden={!open}>

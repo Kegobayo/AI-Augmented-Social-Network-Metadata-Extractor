@@ -49,7 +49,7 @@ function FactRow({ k, v }: { k: string; v: React.ReactNode }) {
 export function InstagramInsights({
   onAnalysed,
 }: {
-  onAnalysed?: (topicId: string | null) => void;
+  onAnalysed?: ((topicId: string | null) => void) | undefined;
 } = {}) {
   const analyze = useServerFn(analyzeInstagramPost);
   const save = useServerFn(saveAnalyzedPost);

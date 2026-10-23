@@ -18,8 +18,8 @@ export function LedgerBar({
   count: number;
   total: number;
   sentiment: number;
-  highlighted?: boolean;
-  note?: string;
+  highlighted?: boolean | undefined;
+  note?: string | undefined;
   onClick?: () => void;
 }) {
   const pct = total > 0 ? Math.max(1.5, Math.round((count / total) * 100)) : 0;

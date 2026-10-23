@@ -14,9 +14,10 @@ import { useCorpus, useCorpusState } from "@/lib/corpus-context";
 import { askKnowledgeBase } from "@/lib/rag.functions";
 
 export const Route = createFileRoute("/ask")({
-  validateSearch: (search: Record<string, unknown>): { q?: string } => ({
-    q: typeof search.q === "string" ? search.q.slice(0, 600) : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { q?: string } => {
+    const q = search["q"];
+    return typeof q === "string" ? { q: q.slice(0, 600) } : {};
+  },
   head: () => ({
     meta: [
       { title: "Ask | Aura Insight" },
