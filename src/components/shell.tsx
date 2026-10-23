@@ -108,7 +108,7 @@ function MobileNav() {
       <Link to="/dashboard" className="flex shrink-0 items-center gap-2 px-2 pr-3">
         <Wordmark />
       </Link>
-      <RailItems className="flex shrink-0 items-center gap-0.5" />
+      <RailItems className="mobile-nav flex shrink-0 items-center gap-0.5" />
     </nav>
   );
 }
