@@ -30,17 +30,15 @@ export const Route = createFileRoute("/network")({
 });
 
 function Network() {
-  const { AUTHORS, CO_OCCURRENCE, HASHTAG_STATS, EDGES } = useCorpus();
+  const { AUTHORS, CO_OCCURRENCE, HASHTAG_STATS, EDGES, ENRICHED } = useCorpus();
   const { openEvidence } = useCorpusState();
   const [focus, setFocus] = useState<string | null>(null);
 
   function selectAccount(id: string) {
-    const posts = corpus.ENRICHED.filter((p) => p.author === id);
+    const posts = ENRICHED.filter((p) => p.author === id);
     setFocus(id);
     if (posts.length) openEvidence(posts, posts[0]!.id);
   }
-
-  const corpus = useCorpus();
 
   return (
     <Shell title="Network">
