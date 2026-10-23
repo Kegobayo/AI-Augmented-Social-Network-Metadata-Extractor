@@ -1,24 +1,26 @@
+/**
+ * Corpus — browse every post in the corpus with its full metadata record.
+ * Captions render in Literata with inline entity marks.
+ */
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
-import { Panel, Shell, SentimentPill } from "@/components/shell";
+import { Shell } from "@/components/shell";
+import { MarkLegend, MarkedText, SentimentValue } from "@/components/marks";
 import { TOPICS, type EnrichedPost } from "@/lib/enrichment";
-import { useCorpus } from "@/lib/corpus-context";
+import { useCorpus, useCorpusState } from "@/lib/corpus-context";
 
 export const Route = createFileRoute("/corpus")({
   head: () => ({
     meta: [
-      { title: "Corpus & Metadata Inspector | Social Network Metadata Extractor" },
+      { title: "Corpus | Aura Insight" },
       {
         name: "description",
         content:
-          "Browse the ingested Instagram corpus and inspect every extracted and AI-enriched metadata field per post.",
+          "Browse the Instagram corpus and inspect every extracted and enriched metadata field per post.",
       },
-      { property: "og:title", content: "Corpus & Metadata Inspector" },
-      {
-        property: "og:description",
-        content: "Post gallery with descriptive, structural and AI-enriched metadata per record.",
-      },
+      { property: "og:title", content: "Corpus | Aura Insight" },
+      { property: "og:description", content: "Every post with its full metadata record." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -26,11 +28,115 @@ export const Route = createFileRoute("/corpus")({
   component: Corpus,
 });
 
+function Row({ field, value }: { field: string; value: React.ReactNode }) {
+  return (
+    <tr className="border-b border-line align-top last:border-0">
+      <td className="label w-40 py-2 pr-3">{field}</td>
+      <td className="py-2 text-[15px] text-foreground">{value}</td>
+    </tr>
+  );
+}
+
+function MetadataRecord({ post }: { post: EnrichedPost }) {
+  return (
+    <div className="specimen-panel p-5">
+      <div className="mb-3 flex items-baseline justify-between gap-3">
+        <h3 className="text-[18px] font-semibold text-foreground">Metadata record</h3>
+        <span className="label">{post.id}</span>
+      </div>
+      <table className="w-full">
+        <tbody>
+          <Row field="Author" value={post.author} />
+          <Row field="Author category" value={post.authorCategory} />
+          <Row field="Followers" value={post.followers.toLocaleString()} />
+          <Row field="Media type" value={post.mediaType} />
+          <Row field="Location tag" value={post.location} />
+          <Row field="Timestamp" value={post.timestamp} />
+          <Row
+            field="Caption"
+            value={
+              <span className="quote text-[15px]">
+                <MarkedText text={post.caption} entities={post.entities} hashtags={post.hashtags} />
+              </span>
+            }
+          />
+          <Row
+            field="Hashtags"
+            value={
+              <span className="flex flex-wrap gap-x-2 gap-y-0.5">
+                {post.hashtags.map((h) => (
+                  <span key={h} className="hashtag">
+                    {h}
+                  </span>
+                ))}
+              </span>
+            }
+          />
+          <Row
+            field="Engagement"
+            value={`${post.likes.toLocaleString()} likes · ${post.comments} comments · ${post.saves} saves · ${post.shares} shares`}
+          />
+          <Row field="Engagement rate" value={`${post.engagementRate}% of followers`} />
+          <Row field="Save ratio" value={`${post.saveRatio}%`} />
+          <Row field="Amplification" value={`${post.amplification}%`} />
+          <Row
+            field="Topic (modelled)"
+            value={
+              <>
+                {post.topic.label} <span className="label">p={post.topicConfidence.toFixed(2)}</span>
+              </>
+            }
+          />
+          <Row
+            field="Sentiment"
+            value={
+              <>
+                {post.sentimentLabel} <SentimentValue value={post.sentiment} /> · emotion: {post.emotion}
+              </>
+            }
+          />
+          <Row
+            field="Named entities"
+            value={
+              <span className="flex flex-wrap gap-x-3 gap-y-1">
+                {post.entities.map((e) => (
+                  <span key={e.text} className={e.type === "TECHNOLOGY" ? "mark-tech" : e.type === "LOCATION" ? "mark-location" : e.type === "ORGANISATION" ? "mark-org" : e.type === "DOMAIN" ? "mark-domain" : "mark-metric"}>
+                    {e.text}
+                  </span>
+                ))}
+              </span>
+            }
+          />
+          <Row
+            field="Comment sample"
+            value={
+              <ul className="list-disc space-y-1 pl-4 text-muted">
+                {post.comments_sample.map((c) => (
+                  <li key={c}>{c}</li>
+                ))}
+              </ul>
+            }
+          />
+          <Row
+            field="Vector index"
+            value={
+              <span className="label">
+                96-dim embedding · [{post.embedding.slice(0, 6).map((v) => v.toFixed(2)).join(", ")} …]
+              </span>
+            }
+          />
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function Corpus() {
   const { ENRICHED } = useCorpus();
+  const { setEvidence, openEvidence } = useCorpusState();
   const [query, setQuery] = useState("");
   const [topicId, setTopicId] = useState("all");
-  const [selectedId, setSelectedId] = useState(ENRICHED[0]!.id);
+  const [selectedId, setSelectedId] = useState(ENRICHED[0]?.id ?? "");
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -46,25 +152,29 @@ function Corpus() {
     });
   }, [query, topicId, ENRICHED]);
 
-  const selected = ENRICHED.find((p) => p.id === selectedId) ?? filtered[0] ?? ENRICHED[0]!;
+  const selected = ENRICHED.find((p) => p.id === selectedId) ?? filtered[0] ?? ENRICHED[0];
+
+  if (!selected) {
+    return (
+      <Shell title="Corpus">
+        <p className="quote text-muted">No records match this filter.</p>
+      </Shell>
+    );
+  }
+
+  const inputClass =
+    "rounded-lg border border-input bg-specimen px-3 text-sm text-foreground outline-none placeholder:text-muted";
 
   return (
-    <Shell
-      title="Corpus"
-      subtitle="Every post in the corpus with its full metadata record — caption, hashtags, engagement and AI enrichment."
-    >
-      <div className="mb-5 flex flex-wrap items-center gap-3">
+    <Shell title="Corpus" subtitle="Every post in the corpus with its full metadata record — caption, hashtags, engagement and enrichment.">
+      <div className="mb-6 flex flex-wrap items-center gap-3">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Filter by caption, account, hashtag or location…"
-          className="h-10 min-w-64 flex-1 rounded-xl border border-input bg-card px-3 text-sm outline-none focus:border-ring"
+          className={`h-10 min-w-64 flex-1 ${inputClass}`}
         />
-        <select
-          value={topicId}
-          onChange={(e) => setTopicId(e.target.value)}
-          className="h-10 rounded-xl border border-input bg-card px-3 text-sm outline-none focus:border-ring"
-        >
+        <select value={topicId} onChange={(e) => setTopicId(e.target.value)} className={`h-10 ${inputClass}`} aria-label="Topic filter">
           <option value="all">All topics</option>
           {TOPICS.map((t) => (
             <option key={t.id} value={t.id}>
@@ -72,150 +182,52 @@ function Corpus() {
             </option>
           ))}
         </select>
-        <span className="label-caps">{filtered.length} records</span>
+        <span className="label">{filtered.length} records</span>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[1.15fr_1fr]">
-        <div className="space-y-3">
-          {filtered.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => setSelectedId(p.id)}
-              className={`paper-panel w-full p-4 text-left transition-colors hover:border-ring ${
-                p.id === selected.id ? "border-primary ring-1 ring-primary/20" : ""
-              }`}
-            >
-              <div className="flex items-baseline justify-between gap-3">
-                <span className="font-mono text-xs text-muted-foreground">
-                  {p.id} · {p.author}
-                </span>
-                <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                  {p.mediaType} · {p.timestamp.slice(0, 10)}
-                </span>
-              </div>
-              <p className="mt-2 line-clamp-2 text-sm text-foreground">{p.caption}</p>
-              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                <span
-                  className="rounded-md px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground"
-                  style={{ background: p.topic.colorVar }}
-                >
-                  {p.topic.label}
-                </span>
-                <span className="font-mono text-muted-foreground">
-                  ♥ {p.likes.toLocaleString()} · ⤵ {p.saves} · ↗ {p.shares}
-                </span>
-                <SentimentPill value={p.sentiment} />
-              </div>
-            </button>
-          ))}
-          {filtered.length === 0 && (
-            <p className="text-sm text-muted-foreground">No records match this filter.</p>
-          )}
+      <MarkLegend className="mb-5" />
+
+      <div className="grid gap-8 lg:grid-cols-[1.05fr_1fr]">
+        <div>
+          {filtered.map((p) => {
+            const isSelected = p.id === selected.id;
+            return (
+              <button
+                key={p.id}
+                onClick={() => {
+                  setSelectedId(p.id);
+                  setEvidence([p]);
+                }}
+                onDoubleClick={() => openEvidence([p], p.id)}
+                className={`w-full border-b border-line px-1 py-4 text-left transition-colors duration-150 last:border-0 hover:bg-page ${
+                  isSelected ? "bg-page" : ""
+                }`}
+                style={isSelected ? { boxShadow: `inset 3px 0 0 var(--highlight)` } : undefined}
+              >
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="text-sm font-semibold text-foreground">{p.author}</span>
+                  <span className="label shrink-0">
+                    {p.mediaType} · {p.timestamp.slice(0, 10)}
+                  </span>
+                </div>
+                <p className="quote mt-1.5 line-clamp-2 text-[15px]">
+                  <MarkedText text={p.caption} entities={p.entities} />
+                </p>
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-muted">
+                  <span>{p.topic.label}</span>
+                  <SentimentValue value={p.sentiment} />
+                  <span>{p.likes.toLocaleString()} likes · {p.saves} saves · {p.shares} shares</span>
+                </div>
+              </button>
+            );
+          })}
+          {filtered.length === 0 && <p className="label">No records match this filter.</p>}
         </div>
 
-        <div className="lg:sticky lg:top-6 lg:self-start">
+        <div className="lg:sticky lg:top-24 lg:self-start">
           <MetadataRecord post={selected} />
         </div>
       </div>
     </Shell>
-  );
-}
-
-function Row({ field, value }: { field: string; value: React.ReactNode }) {
-  return (
-    <tr className="border-b border-rule/60 last:border-0 align-top">
-      <td className="label-caps w-44 py-1.5 pr-3">{field}</td>
-      <td className="py-1.5 text-sm text-foreground">{value}</td>
-    </tr>
-  );
-}
-
-function MetadataRecord({ post }: { post: EnrichedPost }) {
-  return (
-    <Panel title={`Metadata record ${post.id}`} hint="Descriptive · structural · enriched">
-      <table className="w-full">
-        <tbody>
-          <Row field="Author" value={<span className="font-mono text-xs">{post.author}</span>} />
-          <Row field="Author category" value={post.authorCategory} />
-          <Row field="Followers" value={post.followers.toLocaleString()} />
-          <Row field="Media type" value={post.mediaType} />
-          <Row field="Location tag" value={post.location} />
-          <Row field="Timestamp" value={<span className="font-mono text-xs">{post.timestamp}</span>} />
-          <Row field="Caption" value={post.caption} />
-          <Row
-            field="Hashtags"
-            value={<span className="font-mono text-xs">{post.hashtags.join("  ")}</span>}
-          />
-          <Row
-            field="Engagement"
-            value={
-              <span className="font-mono text-xs">
-                {post.likes.toLocaleString()} likes · {post.comments} comments · {post.saves} saves ·{" "}
-                {post.shares} shares
-              </span>
-            }
-          />
-          <Row field="Engagement rate" value={`${post.engagementRate}% of followers`} />
-          <Row field="Save ratio" value={`${post.saveRatio}%`} />
-          <Row field="Amplification" value={`${post.amplification}%`} />
-          <Row
-            field="Topic (modelled)"
-            value={
-              <>
-                {post.topic.label}{" "}
-                <span className="font-mono text-xs text-muted-foreground">
-                  p={post.topicConfidence.toFixed(2)}
-                </span>
-              </>
-            }
-          />
-          <Row
-            field="Sentiment"
-            value={
-              <>
-                {post.sentimentLabel} <SentimentPill value={post.sentiment} /> · emotion:{" "}
-                {post.emotion}
-              </>
-            }
-          />
-          <Row
-            field="Named entities"
-            value={
-              <div className="flex flex-wrap gap-1.5">
-                {post.entities.map((e) => (
-                  <span
-                    key={e.text}
-                    className="rounded-md border border-border bg-secondary px-1.5 py-0.5 text-xs"
-                  >
-                    {e.text}
-                    <span className="ml-1 font-mono text-[10px] text-muted-foreground">
-                      {e.type.slice(0, 4)}
-                    </span>
-                  </span>
-                ))}
-              </div>
-            }
-          />
-          <Row
-            field="Comment sample"
-            value={
-              <ul className="list-disc space-y-1 pl-4 text-sm text-muted-foreground">
-                {post.comments_sample.map((c) => (
-                  <li key={c}>{c}</li>
-                ))}
-              </ul>
-            }
-          />
-          <Row
-            field="Vector index"
-            value={
-              <span className="font-mono text-xs text-muted-foreground">
-                96-dim embedding · [{post.embedding.slice(0, 6).map((v) => v.toFixed(2)).join(", ")} …]
-              </span>
-            }
-          />
-        </tbody>
-      </table>
-    </Panel>
   );
 }

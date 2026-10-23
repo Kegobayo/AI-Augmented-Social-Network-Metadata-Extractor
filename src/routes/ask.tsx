@@ -5,12 +5,12 @@
  */
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { Shell } from "@/components/shell";
 import { CitationTab, SentimentValue } from "@/components/marks";
 import { type Retrieved } from "@/lib/enrichment";
-import { useCorpusState } from "@/lib/corpus-context";
+import { useCorpus, useCorpusState } from "@/lib/corpus-context";
 import { askKnowledgeBase } from "@/lib/rag.functions";
 
 export const Route = createFileRoute("/ask")({
@@ -61,13 +61,7 @@ function renderInline(
       const n = citationIndex.get(id);
       if (n != null) {
         return (
-          <CitationTab
-            key={key}
-            n={n}
-            label={id}
-            onOpen={() => onCitation(id)}
-            onHover={() => onHover(id)}
-          />
+          <CitationTab key={key} n={n} label={id} onOpen={() => onCitation(id)} onHover={() => onHover(id)} />
         );
       }
       return <span key={key}>[{id}]</span>;
@@ -92,6 +86,7 @@ function renderInline(
 
 function Ask() {
   const { q } = Route.useSearch();
+  const { retrieve } = useCorpus();
   const { openEvidence, setEvidence, focusEvidence, setRailOpen } = useCorpusState();
   const ask = useServerFn(askKnowledgeBase);
   const [question, setQuestion] = useState(q ?? "");
@@ -121,24 +116,15 @@ function Ask() {
         setAnswer(result.answer);
         setEvidence(hits.map((h) => h.post));
         if (window.innerWidth >= 1024) setRailOpen(true);
-      } else setError(result.error);
+      } else {
+        setError(result.error);
+      }
     } catch {
       setError("The request could not be completed. Please try again.");
     } finally {
       setLoading(false);
     }
   }
-
-  const { retrieve } = useCorpusStateSafe();
-
-  useEffect(() => {
-    if (q && q.trim().length >= 3) {
-      setQuestion(q);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  if (!retrieve) return null;
 
   const citationIndex = new Map(retrieved.map((r, i) => [r.post.id, i + 1]));
 
@@ -182,7 +168,9 @@ function Ask() {
           </button>
         </div>
       </form>
-      <p className="label mt-2">Every claim is cited with the post it came from. Retrieval takes the 6 nearest posts.</p>
+      <p className="label mt-2">
+        Every claim is cited with the post it came from. Retrieval takes the 6 nearest posts.
+      </p>
       <p className="mt-3 flex flex-wrap gap-x-6 gap-y-1.5 text-sm">
         {SUGGESTIONS.map((s) => (
           <button
@@ -201,9 +189,7 @@ function Ask() {
 
       <section className="mt-10 border-t border-line pt-8">
         {error && <p className="text-sm text-negative">{error}</p>}
-        {loading && !answer && (
-          <p className="quote text-muted">Retrieving the nearest posts and reading them…</p>
-        )}
+        {loading && !answer && <p className="quote text-muted">Retrieving the nearest posts and reading them…</p>}
         {!loading && !answer && !error && (
           <p className="quote text-muted">
             Ask a question and the answer appears here, grounded in the retrieved posts. Each citation
@@ -254,13 +240,13 @@ function Ask() {
         {retrieved.length === 0 ? (
           <p className="label mt-4">Nothing retrieved yet.</p>
         ) : (
-          <ol className="mt-4 space-y-0">
+          <ol className="mt-4">
             {retrieved.map((r) => (
               <li
                 key={r.post.id}
                 className="grid grid-cols-[auto_1fr] items-baseline gap-x-4 border-b border-line py-2.5 text-sm last:border-0"
               >
-                <span className="font-semibold text-foreground">
+                <span className="shrink-0 font-semibold text-foreground">
                   [{citationIndex.get(r.post.id)}] {r.post.author}
                 </span>
                 <span className="min-w-0">
@@ -286,21 +272,3 @@ function Ask() {
     </Shell>
   );
 }
-
-/* retrieve() comes from the corpus context; keep the hook call order stable. */
-function useCorpusStateSafe() {
-  const ctx = useCorpusStateBridge();
-  return { retrieve: ctx?.retrieve };
-}
-
-function useCorpusStateBridge() {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  return require_bridge();
-}
-
-function require_bridge() {
-  return BRIDGE.retrieve();
-}
-
-import { useCorpusState as useCorpusStateImpl } from "@/lib/corpus-context";
-const BRIDGE = { retrieve: () => useCorpusStateImpl() as { retrieve: never } | null };
