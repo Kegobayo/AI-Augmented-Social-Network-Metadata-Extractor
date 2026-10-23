@@ -1,25 +1,22 @@
-/**
- * How it works — the real pipeline behind the app, from collection to cited
- * answers, plus the knowledge facets and the SECI framing.
- */
 import { createFileRoute } from "@tanstack/react-router";
 
-import { Shell } from "@/components/shell";
+import { Panel, Shell } from "@/components/shell";
 import { CORPUS_STATS } from "@/lib/enrichment";
 
 export const Route = createFileRoute("/architecture")({
   head: () => ({
     meta: [
-      { title: "How it works | Aura Insight" },
+      { title: "System Architecture | AI-Augmented Metadata Extractor" },
       {
         name: "description",
         content:
-          "The pipeline behind Aura Insight: Instagram collection, AI enrichment, vector and graph storage, and cited generative answers.",
+          "Four-layer architecture of the AI-augmented social network metadata extractor: ingestion, enrichment, generative knowledge core and knowledge consumption.",
       },
-      { property: "og:title", content: "How it works | Aura Insight" },
+      { property: "og:title", content: "System Architecture" },
       {
         property: "og:description",
-        content: "Collection, enrichment, storage and retrieval-augmented answers, step by step.",
+        content:
+          "Ingestion, AI enrichment, generative knowledge core and consumption layers, mapped to the research methodology.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -30,32 +27,32 @@ export const Route = createFileRoute("/architecture")({
 
 const LAYERS = [
   {
-    step: "Collect",
-    title: "Data ingestion & the Instagram source",
+    n: "Layer 1",
+    title: "Data ingestion & Instagram source",
     body: "Authorised Graph API access or ethical collection tooling, handling authentication, rate limiting and PII anonymisation. Raw output: posts, reels, stories and comments with timestamps, likes, saves, shares, hashtags, follower ties and author information.",
-    impl: `This build ships an anonymised demonstration corpus of ${CORPUS_STATS.posts} posts and ${CORPUS_STATS.ties} follower ties so the pipeline is reproducible without platform credentials; your own account can be linked on My corpus.`,
+    impl: `This prototype ships an anonymised demonstration corpus of ${CORPUS_STATS.posts} posts and ${CORPUS_STATS.ties} follower ties so the pipeline is reproducible without platform credentials.`,
   },
   {
-    step: "Enrich",
-    title: "AI-augmented metadata extraction",
+    n: "Layer 2",
+    title: "AI-augmented metadata extraction & enrichment",
     body: "Text pre-processing and anonymisation, followed by named entity and concept extraction, topic modelling, sentiment and emotion scoring, and network graph mapping for influencers and community clusters.",
     impl: "Implemented as deterministic in-browser surrogates for spaCy, BERTopic and RoBERTa, plus label-propagation community detection over the follower graph.",
   },
   {
-    step: "Store",
-    title: "The generative knowledge core",
-    body: "A vector index holding semantic embeddings of enriched chunks, a graph store holding relational metadata, and a retrieval engine combining semantic search with graph traversal.",
-    impl: "A 96-dimension hashed embedding index with cosine retrieval, boosted by author influence and hashtag overlap.",
+    n: "Layer 3",
+    title: "Generative knowledge management core",
+    body: "A vector index holding semantic embeddings of enriched chunks, a graph store holding relational metadata, a retrieval engine combining semantic search with graph traversal, and a large language model performing synthesis through retrieval-augmented generation.",
+    impl: "A 96-dimension hashed embedding index with cosine retrieval, boosted by author influence and hashtag overlap; synthesis runs server-side against a hosted language model, returning citations to post identifiers.",
   },
   {
-    step: "Ask",
-    title: "Answers and knowledge consumption",
-    body: "A retrieval-augmented language model synthesises answers for decision makers, and the results are consumed through the overview, corpus inspector, network analysis and query interface.",
-    impl: "Synthesis runs server-side against a hosted language model, returning citations to post identifiers that open in the evidence panel.",
+    n: "Layer 4",
+    title: "Application & knowledge consumption",
+    body: "Interactive query interface, dynamic knowledge dashboard with trends, network graphs and cited reports, serving researchers, analysts and decision makers.",
+    impl: "The dashboard, corpus inspector, network analysis view and generative query interface in this application.",
   },
 ];
 
-const FACETS: [string, string][] = [
+const FACETS = [
   ["Who", "Author identity, category, follower ties and community membership"],
   ["What", "Caption text, entities, modelled topic, hashtags and media type"],
   ["When", "Post timestamp, collection window and sentiment trend position"],
@@ -68,53 +65,54 @@ function Architecture() {
   return (
     <Shell
       title="How it works"
-      subtitle="The pipeline behind the app — collect, enrich, store, ask — and what the research underneath it adds."
+      subtitle="How the running application implements the four-phase design proposed in Chapter Three."
     >
-      <ol>
+      <div className="space-y-4">
         {LAYERS.map((l) => (
-          <li key={l.step} className="border-b border-line py-7 first:pt-0 last:border-0">
-            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-              <span className="text-[13px] font-semibold text-muted">{l.step}</span>
-              <h3 className="text-[18px] font-semibold text-foreground">{l.title}</h3>
+          <div key={l.n} className="paper-panel p-5">
+            <div className="flex flex-wrap items-baseline gap-3">
+              <span className="label-caps">{l.n}</span>
+              <h3 className="text-base font-semibold text-foreground">{l.title}</h3>
             </div>
-            <p className="mt-2 max-w-[75ch] text-[15px] leading-relaxed text-foreground">{l.body}</p>
-            <p className="mt-2 max-w-[75ch] border-l-2 border-highlight pl-3 text-sm text-muted">
+            <p className="mt-2 text-sm leading-relaxed text-foreground">{l.body}</p>
+            <p className="mt-2 border-l-2 border-accent pl-3 text-sm text-muted-foreground">
               In this build: {l.impl}
             </p>
-          </li>
+          </div>
         ))}
-      </ol>
+      </div>
 
-      <section className="mt-10 grid gap-10 border-t border-line pt-8 lg:grid-cols-2">
-        <div>
-          <h3 className="text-[18px] font-semibold text-foreground">Knowledge facets captured per record</h3>
-          <table className="mt-3 w-full text-sm">
+      <div className="mt-5 grid gap-5 lg:grid-cols-2">
+        <Panel title="Knowledge facets captured per record" hint="Primitive questions">
+          <table className="w-full text-sm">
             <tbody>
               {FACETS.map(([q, d]) => (
-                <tr key={q} className="border-b border-line align-top last:border-0">
-                  <td className="w-16 py-2.5 text-[15px] font-semibold text-foreground">{q}</td>
-                  <td className="py-2.5 text-muted">{d}</td>
+                <tr key={q} className="border-b border-rule/60 last:border-0 align-top">
+                  <td className="w-20 py-2 text-base font-semibold text-foreground">
+                    {q}
+                  </td>
+                  <td className="py-2 text-muted-foreground">{d}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
-        <div>
-          <h3 className="text-[18px] font-semibold text-foreground">From tacit to explicit knowledge</h3>
-          <p className="quote mt-3 text-[15px] text-foreground">
-            Posting behaviour — composing a caption, selecting hashtags, tagging a location, responding
-            in comment threads — externalises judgement that would otherwise stay tacit. The enrichment
-            layer codifies that behaviour as structured metadata, the vector and graph stores combine it
-            across accounts, and the generative layer internalises it again as a cited brief a decision
-            maker can act on.
+        </Panel>
+
+        <Panel title="From tacit to explicit knowledge" hint="SECI alignment">
+          <p className="text-sm leading-relaxed text-foreground">
+            Posting behaviour — composing a caption, selecting hashtags, tagging a location,
+            responding in comment threads — externalises judgement that would otherwise stay tacit.
+            The enrichment layer codifies that behaviour as structured metadata, the vector and graph
+            stores combine it across accounts, and the generative layer internalises it again as a
+            cited brief a decision maker can act on.
           </p>
-          <p className="quote mt-4 text-[15px] text-muted">
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             Limitation acknowledged in the study: metadata can only capture the explicit and implicit
             strata. Fully tacit expertise resists codification, so generated output is presented as
             evidence-linked synthesis rather than automated decision making.
           </p>
-        </div>
-      </section>
+        </Panel>
+      </div>
     </Shell>
   );
 }

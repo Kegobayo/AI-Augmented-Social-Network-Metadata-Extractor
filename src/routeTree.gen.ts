@@ -13,7 +13,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ArchitectureRouteImport } from './routes/architecture'
 import { Route as AskRouteImport } from './routes/ask'
 import { Route as CorpusRouteImport } from './routes/corpus'
-import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as MyCorpusRouteImport } from './routes/my-corpus'
@@ -39,11 +38,6 @@ const AskRoute = AskRouteImport.update({
 const CorpusRoute = CorpusRouteImport.update({
   id: '/corpus',
   path: '/corpus',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -83,7 +77,6 @@ export interface FileRoutesByFullPath {
   '/architecture': typeof ArchitectureRoute
   '/ask': typeof AskRoute
   '/corpus': typeof CorpusRoute
-  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
   '/my-corpus': typeof MyCorpusRoute
@@ -96,7 +89,6 @@ export interface FileRoutesByTo {
   '/architecture': typeof ArchitectureRoute
   '/ask': typeof AskRoute
   '/corpus': typeof CorpusRoute
-  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
   '/my-corpus': typeof MyCorpusRoute
@@ -110,7 +102,6 @@ export interface FileRoutesById {
   '/architecture': typeof ArchitectureRoute
   '/ask': typeof AskRoute
   '/corpus': typeof CorpusRoute
-  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
   '/my-corpus': typeof MyCorpusRoute
@@ -125,7 +116,6 @@ export interface FileRouteTypes {
     | '/architecture'
     | '/ask'
     | '/corpus'
-    | '/dashboard'
     | '/login'
     | '/mcp'
     | '/my-corpus'
@@ -138,7 +128,6 @@ export interface FileRouteTypes {
     | '/architecture'
     | '/ask'
     | '/corpus'
-    | '/dashboard'
     | '/login'
     | '/mcp'
     | '/my-corpus'
@@ -151,7 +140,6 @@ export interface FileRouteTypes {
     | '/architecture'
     | '/ask'
     | '/corpus'
-    | '/dashboard'
     | '/login'
     | '/mcp'
     | '/my-corpus'
@@ -165,7 +153,6 @@ export interface RootRouteChildren {
   ArchitectureRoute: typeof ArchitectureRoute
   AskRoute: typeof AskRoute
   CorpusRoute: typeof CorpusRoute
-  DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
   McpRoute: typeof McpRoute
   MyCorpusRoute: typeof MyCorpusRoute
@@ -202,13 +189,6 @@ declare module '@tanstack/react-router' {
       path: '/corpus'
       fullPath: '/corpus'
       preLoaderRoute: typeof CorpusRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -261,7 +241,6 @@ const rootRouteChildren: RootRouteChildren = {
   ArchitectureRoute: ArchitectureRoute,
   AskRoute: AskRoute,
   CorpusRoute: CorpusRoute,
-  DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
   McpRoute: McpRoute,
   MyCorpusRoute: MyCorpusRoute,

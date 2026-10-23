@@ -1,27 +1,23 @@
-/**
- * Network — follower graph with pattern-filled communities, account register,
- * hashtag co-occurrence and hashtag reach. Selecting a node fills the
- * evidence rail with that account's posts.
- */
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
-import { Shell } from "@/components/shell";
-import { NetworkGraph, NetworkLegend } from "@/components/network-graph";
-import { SentimentValue } from "@/components/marks";
-import { useCorpus, useCorpusState } from "@/lib/corpus-context";
+import { Panel, Shell, SentimentPill } from "@/components/shell";
+import { useCorpus } from "@/lib/corpus-context";
 
 export const Route = createFileRoute("/network")({
   head: () => ({
     meta: [
-      { title: "Network | Aura Insight" },
+      { title: "Social Network Analysis | Metadata Extractor" },
       {
         name: "description",
         content:
-          "Who shapes the conversation: the follower graph, detected communities, influence ranking and hashtag co-occurrence.",
+          "Follower graph, community detection, influencer ranking and hashtag co-occurrence over the enriched Instagram metadata corpus.",
       },
-      { property: "og:title", content: "Network | Aura Insight" },
-      { property: "og:description", content: "Accounts, ties, communities and hashtag co-occurrence." },
+      { property: "og:title", content: "Social Network Analysis" },
+      {
+        property: "og:description",
+        content: "Nodes, ties, communities and hashtag co-occurrence in the metadata corpus.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -29,136 +25,192 @@ export const Route = createFileRoute("/network")({
   component: Network,
 });
 
+const COMMUNITY_COLORS: Record<string, string> = {};
+function colorFor(community: string) {
+  if (!COMMUNITY_COLORS[community]) {
+    const palette = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
+    COMMUNITY_COLORS[community] = palette[Object.keys(COMMUNITY_COLORS).length % palette.length]!;
+  }
+  return COMMUNITY_COLORS[community]!;
+}
+
 function Network() {
-  const { AUTHORS, CO_OCCURRENCE, HASHTAG_STATS, EDGES, ENRICHED } = useCorpus();
-  const { openEvidence } = useCorpusState();
+  const { AUTHORS, CO_OCCURRENCE, HASHTAG_STATS, EDGES: FOLLOW_EDGES } = useCorpus();
   const [focus, setFocus] = useState<string | null>(null);
 
-  function selectAccount(id: string) {
-    const posts = ENRICHED.filter((p) => p.author === id);
-    setFocus(id);
-    if (posts.length) openEvidence(posts, posts[0]!.id);
-  }
+  const layout = useMemo(() => {
+    const r = 175;
+    const cx = 260;
+    const cy = 205;
+    return AUTHORS.map((a, i) => {
+      const angle = (i / AUTHORS.length) * Math.PI * 2 - Math.PI / 2;
+      return { ...a, x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
+    });
+  }, [AUTHORS]);
+
+  const pos = Object.fromEntries(layout.map((n) => [n.id, n]));
+  const maxInfluence = Math.max(...AUTHORS.map((a) => a.influence));
+  const communities = [...new Set(AUTHORS.map((a) => a.community))];
 
   return (
-    <Shell title="Network">
-      <section>
-        <p className="label">Node size is influence (in-ties, reach and engagement); fill pattern is the detected community. Click a node to see its posts.</p>
-        <div className="mt-4 grid gap-8 lg:grid-cols-[1.2fr_1fr]">
-          <div className="specimen-panel p-4">
-            <NetworkGraph authors={AUTHORS} edges={EDGES} focusId={focus} onSelect={selectAccount} />
-            <div className="mt-2">
-              <NetworkLegend authors={AUTHORS} />
-            </div>
+    <Shell
+      title="Network"
+      subtitle="Who influences whom: the follower graph, detected communities, influence ranking and hashtag reach."
+    >
+      <div className="grid gap-5 lg:grid-cols-[1.1fr_1fr]">
+        <Panel title="Follower graph" hint="Label propagation communities">
+          <svg viewBox="0 0 520 410" className="w-full">
+            {FOLLOW_EDGES.map(([a, b], i) => {
+              const from = pos[a];
+              const to = pos[b];
+              if (!from || !to) return null;
+              const active = !focus || focus === a || focus === b;
+              return (
+                <line
+                  key={i}
+                  x1={from.x}
+                  y1={from.y}
+                  x2={to.x}
+                  y2={to.y}
+                  stroke="var(--rule)"
+                  strokeWidth={active ? 1.4 : 0.6}
+                  opacity={active ? 0.9 : 0.25}
+                />
+              );
+            })}
+            {layout.map((n) => {
+              const active = !focus || focus === n.id;
+              const radius = 8 + (n.influence / maxInfluence) * 13;
+              return (
+                <g
+                  key={n.id}
+                  onMouseEnter={() => setFocus(n.id)}
+                  onMouseLeave={() => setFocus(null)}
+                  className="cursor-pointer"
+                  opacity={active ? 1 : 0.35}
+                >
+                  <circle cx={n.x} cy={n.y} r={radius} fill={colorFor(n.community)} opacity={0.85} />
+                  <text
+                    x={n.x}
+                    y={n.y + radius + 12}
+                    textAnchor="middle"
+                    fontSize="10"
+                    fontFamily="var(--font-mono)"
+                    fill="var(--foreground)"
+                  >
+                    {n.id}
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
+          <div className="mt-2 flex flex-wrap gap-3 text-xs">
+            {communities.map((c) => (
+              <span key={c} className="flex items-center gap-1.5 text-muted-foreground">
+                <span
+                  className="inline-block size-2.5 rounded-full"
+                  style={{ background: colorFor(c) }}
+                />
+                {c}
+              </span>
+            ))}
           </div>
-          <div>
-            <h3 className="text-[18px] font-semibold text-foreground">Account register</h3>
-            <div className="mt-3 max-h-[430px] overflow-y-auto">
-              <table className="w-full text-sm">
-                <thead className="sticky top-0 bg-page">
-                  <tr className="border-b border-line-strong text-left">
-                    <th className="py-2 font-medium">Account</th>
-                    <th className="py-2 font-medium">Type</th>
-                    <th className="py-2 text-right font-medium">In</th>
-                    <th className="py-2 text-right font-medium">Out</th>
-                    <th className="py-2 text-right font-medium">Influence</th>
-                    <th className="py-2 text-right font-medium">Mood</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...AUTHORS]
-                    .sort((a, b) => b.influence - a.influence)
-                    .map((a) => (
-                      <tr
-                        key={a.id}
-                        onMouseEnter={() => setFocus(a.id)}
-                        onMouseLeave={() => setFocus(null)}
-                        onClick={() => selectAccount(a.id)}
-                        className={`cursor-pointer border-b border-line transition-colors duration-150 last:border-0 hover:bg-page ${focus === a.id ? "bg-page" : ""}`}
-                      >
-                        <td className="py-2">
-                          <div className="text-foreground">{a.id}</div>
-                          <div className="label">{a.dominantTopic}</div>
-                        </td>
-                        <td className="py-2 text-muted">{a.category}</td>
-                        <td className="py-2 text-right text-muted">{a.inDegree}</td>
-                        <td className="py-2 text-right text-muted">{a.outDegree}</td>
-                        <td className="py-2 text-right font-semibold text-foreground">{a.influence}</td>
-                        <td className="py-2 text-right">
-                          <SentimentValue value={a.avgSentiment} />
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </section>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Node radius encodes influence (in-degree, reach and cumulative engagement). Hover a node
+            to isolate its ties.
+          </p>
+        </Panel>
 
-      <section className="mt-12 grid gap-8 border-t border-line pt-8 lg:grid-cols-2">
-        <div>
-          <h3 className="text-[18px] font-semibold text-foreground">Hashtag co-occurrence</h3>
-          <p className="label mt-1">Tag pairs that appear on the same posts at least twice.</p>
-          <table className="mt-3 w-full text-sm">
+        <Panel title="Account register" hint="Node attributes">
+          <div className="max-h-[430px] overflow-y-auto">
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 bg-card">
+                <tr className="border-b border-rule text-left">
+                  <th className="label-caps pb-2">Account</th>
+                  <th className="label-caps pb-2">Type</th>
+                  <th className="label-caps pb-2 text-right">In</th>
+                  <th className="label-caps pb-2 text-right">Out</th>
+                  <th className="label-caps pb-2 text-right">Infl.</th>
+                  <th className="label-caps pb-2 text-right">Sent.</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...AUTHORS]
+                  .sort((a, b) => b.influence - a.influence)
+                  .map((a) => (
+                    <tr
+                      key={a.id}
+                      onMouseEnter={() => setFocus(a.id)}
+                      onMouseLeave={() => setFocus(null)}
+                      className="border-b border-rule/60 last:border-0 hover:bg-secondary"
+                    >
+                      <td className="py-2">
+                        <div className="font-mono text-xs text-foreground">{a.id}</div>
+                        <div className="text-[11px] text-muted-foreground">{a.dominantTopic}</div>
+                      </td>
+                      <td className="py-2 text-xs text-muted-foreground">{a.category}</td>
+                      <td className="py-2 text-right font-mono text-xs">{a.inDegree}</td>
+                      <td className="py-2 text-right font-mono text-xs">{a.outDegree}</td>
+                      <td className="py-2 text-right font-mono text-xs font-semibold">
+                        {a.influence}
+                      </td>
+                      <td className="py-2 text-right">
+                        <SentimentPill value={a.avgSentiment} />
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
+      </div>
+
+      <div className="mt-5 grid gap-5 lg:grid-cols-2">
+        <Panel title="Hashtag co-occurrence" hint="Weight ≥ 2">
+          <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-line-strong text-left">
-                <th className="py-2 font-medium">Tag pair</th>
-                <th className="py-2 pr-6 text-right font-medium">Together</th>
-                <th className="w-28 py-2 font-medium">Strength</th>
+              <tr className="border-b border-rule text-left">
+                <th className="label-caps pb-2">Tag pair</th>
+                <th className="label-caps pb-2 text-right">Co-occurrences</th>
+                <th className="label-caps pb-2">Strength</th>
               </tr>
             </thead>
             <tbody>
-              {CO_OCCURRENCE.length === 0 ? (
-                <tr>
-                  <td colSpan={3} className="py-3 text-muted">
-                    No tag pairs repeat in this corpus yet.
+              {CO_OCCURRENCE.slice(0, 12).map((e) => (
+                <tr key={`${e.a}${e.b}`} className="border-b border-rule/60 last:border-0">
+                  <td className="py-2 font-mono text-xs">
+                    {e.a} <span className="text-muted-foreground">↔</span> {e.b}
                   </td>
-                </tr>
-              ) : (
-                CO_OCCURRENCE.slice(0, 12).map((e) => (
-                <tr key={`${e.a}${e.b}`} className="border-b border-line last:border-0">
-                  <td className="py-2">
-                    <span className="hashtag">{e.a}</span>
-                    <span className="mx-1.5 text-muted">with</span>
-                    <span className="hashtag">{e.b}</span>
-                  </td>
-                  <td className="py-2 pr-6 text-right text-muted">{e.weight}</td>
+                  <td className="py-2 text-right font-mono text-xs">{e.weight}</td>
                   <td className="py-2">
                     <span
-                      className="inline-block h-2 rounded-sm bg-ink/80"
-                      style={{ width: `${Math.max(6, (e.weight / (CO_OCCURRENCE[0]?.weight ?? 1)) * 100)}%` }}
+                      className="inline-block h-2 rounded-[2px] bg-chart-3"
+                      style={{ width: `${(e.weight / CO_OCCURRENCE[0]!.weight) * 90}px` }}
                     />
                   </td>
                 </tr>
-                ))
-              )}
+              ))}
             </tbody>
           </table>
-        </div>
-        <div>
-          <h3 className="text-[18px] font-semibold text-foreground">Hashtag reach</h3>
-          <p className="label mt-1">Likes plus shares per tag.</p>
-          <div className="mt-4 space-y-2.5">
+        </Panel>
+
+        <Panel title="Hashtag reach" hint="Likes + shares per tag">
+          <div className="space-y-2">
             {HASHTAG_STATS.slice(0, 14).map((h) => (
-              <div key={h.tag} className="flex items-center gap-3 text-sm">
-                <span className="w-40 shrink-0 truncate">
-                  <span className="hashtag">{h.tag}</span>
-                </span>
-                <span className="relative h-2.5 flex-1">
-                  <span
-                    className="absolute left-0 top-0 h-2.5 rounded-sm bg-ink/80"
-                    style={{ width: `${Math.max(2, (h.reach / (HASHTAG_STATS[0]?.reach ?? 1)) * 100)}%` }}
-                  />
-                </span>
-                <span className="w-16 shrink-0 text-right text-muted">
-                  {h.reach >= 1_000_000 ? `${(h.reach / 1_000_000).toFixed(1)}m` : `${(h.reach / 1000).toFixed(1)}k`}
+              <div key={h.tag} className="flex items-center gap-3 text-xs">
+                <span className="w-44 font-mono text-foreground">{h.tag}</span>
+                <span
+                  className="h-2.5 rounded-[2px] bg-chart-1"
+                  style={{ width: `${(h.reach / HASHTAG_STATS[0]!.reach) * 45 + 4}%` }}
+                />
+                <span className="font-mono text-muted-foreground">
+                  {(h.reach / 1000).toFixed(1)}k
                 </span>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </Panel>
+      </div>
     </Shell>
   );
 }
