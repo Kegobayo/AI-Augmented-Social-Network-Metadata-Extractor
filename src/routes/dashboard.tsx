@@ -84,7 +84,7 @@ function MoodLine({
     .sort((a, b) => a.i - b.i);
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Mood over time, weekly mean polarity">
+    <svg viewBox={`0 0 ${W} ${H}`} className="mx-auto w-full max-w-[840px]" role="img" aria-label="Mood over time, weekly mean polarity">
       <line x1={x0 - 8} y1={yZero} x2={x1 + 8} y2={yZero} stroke="var(--line-strong)" strokeWidth="1" strokeDasharray="3 4" />
       <polyline
         points={timeline.map((_, i) => `${xs[i]},${ys[i]}`).join(" ")}
