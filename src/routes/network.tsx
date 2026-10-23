@@ -104,27 +104,35 @@ function Network() {
             <thead>
               <tr className="border-b border-line-strong text-left">
                 <th className="py-2 font-medium">Tag pair</th>
-                <th className="py-2 text-right font-medium">Together</th>
-                <th className="py-2 font-medium">Strength</th>
+                <th className="py-2 pr-6 text-right font-medium">Together</th>
+                <th className="w-28 py-2 font-medium">Strength</th>
               </tr>
             </thead>
             <tbody>
-              {CO_OCCURRENCE.slice(0, 12).map((e) => (
+              {CO_OCCURRENCE.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className="py-3 text-muted">
+                    No tag pairs repeat in this corpus yet.
+                  </td>
+                </tr>
+              ) : (
+                CO_OCCURRENCE.slice(0, 12).map((e) => (
                 <tr key={`${e.a}${e.b}`} className="border-b border-line last:border-0">
                   <td className="py-2">
                     <span className="hashtag">{e.a}</span>
                     <span className="mx-1.5 text-muted">with</span>
                     <span className="hashtag">{e.b}</span>
                   </td>
-                  <td className="py-2 text-right text-muted">{e.weight}</td>
-                  <td className="w-28 py-2">
+                  <td className="py-2 pr-6 text-right text-muted">{e.weight}</td>
+                  <td className="py-2">
                     <span
                       className="inline-block h-2 rounded-sm bg-ink/80"
                       style={{ width: `${Math.max(6, (e.weight / (CO_OCCURRENCE[0]?.weight ?? 1)) * 100)}%` }}
                     />
                   </td>
                 </tr>
-              ))}
+                ))
+              )}
             </tbody>
           </table>
         </div>
