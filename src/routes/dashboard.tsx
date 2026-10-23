@@ -10,7 +10,7 @@ import { useMemo, useState } from "react";
 import { Shell } from "@/components/shell";
 import { LedgerBar } from "@/components/ledger-bar";
 import { NetworkGraph, NetworkLegend } from "@/components/network-graph";
-import { MarkLegend, MarkedText, formatSent, SentimentValue, type SimpleEntity } from "@/components/marks";
+import { MarkLegend, formatSent, SentimentValue } from "@/components/marks";
 import { useCorpus, useCorpusState } from "@/lib/corpus-context";
 import type { EnrichedPost } from "@/lib/enrichment";
 
