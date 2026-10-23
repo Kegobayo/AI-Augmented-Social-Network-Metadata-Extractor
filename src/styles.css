@@ -271,6 +271,16 @@
   justify-content: flex-start;
 }
 
+/* Mobile nav strip: always the compact icon + short label form. */
+.mobile-nav .rail-full {
+  display: none;
+}
+
+.mobile-nav .rail-mini {
+  display: inline;
+  white-space: nowrap;
+}
+
 /* --------------------------------------------------------- hero motion */
 
 /* The one allowed load motion: highlighter marks sweep across the hero

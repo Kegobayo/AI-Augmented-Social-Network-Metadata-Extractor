@@ -14,7 +14,7 @@ import { useCorpus, useCorpusState } from "@/lib/corpus-context";
 import { askKnowledgeBase } from "@/lib/rag.functions";
 
 export const Route = createFileRoute("/ask")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { q?: string } => ({
     q: typeof search.q === "string" ? search.q.slice(0, 600) : undefined,
   }),
   head: () => ({

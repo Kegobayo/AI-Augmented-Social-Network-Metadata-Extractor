@@ -301,7 +301,7 @@ function Dashboard() {
               <tr className="border-b border-line-strong text-left">
                 <th className="py-2 font-medium">Account</th>
                 <th className="py-2 font-medium">Community</th>
-                <th className="py-2 text-right font-medium">In-ties</th>
+                <th className="py-2 text-right font-medium whitespace-nowrap">In-ties</th>
                 <th className="py-2 text-right font-medium">Influence</th>
               </tr>
             </thead>
