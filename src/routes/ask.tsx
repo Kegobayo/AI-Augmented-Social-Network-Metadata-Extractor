@@ -1,25 +1,34 @@
+/**
+ * Ask — generative query interface. Answers render in Literata with
+ * highlighter citation tabs; every claim opens the supporting post in the
+ * evidence rail. Retrieved posts feed the rail directly.
+ */
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import { Panel, Shell, SentimentPill } from "@/components/shell";
+import { Shell } from "@/components/shell";
+import { CitationTab, SentimentValue } from "@/components/marks";
 import { type Retrieved } from "@/lib/enrichment";
-import { useCorpus } from "@/lib/corpus-context";
+import { useCorpusState } from "@/lib/corpus-context";
 import { askKnowledgeBase } from "@/lib/rag.functions";
 
 export const Route = createFileRoute("/ask")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    q: typeof search.q === "string" ? search.q.slice(0, 600) : undefined,
+  }),
   head: () => ({
     meta: [
-      { title: "Generative Query Interface | Metadata Extractor" },
+      { title: "Ask | Aura Insight" },
       {
         name: "description",
         content:
-          "Ask natural-language questions of the enriched Instagram metadata corpus and receive cited, synthesised answers through retrieval-augmented generation.",
+          "Ask natural-language questions of the Instagram corpus and receive cited answers — every claim links back to the posts behind it.",
       },
-      { property: "og:title", content: "Generative Query Interface (RAG)" },
+      { property: "og:title", content: "Ask your corpus | Aura Insight" },
       {
         property: "og:description",
-        content: "Retrieval-augmented synthesis of social network metadata for decision support.",
+        content: "Cited answers over retrieved Instagram posts, readable in the evidence panel.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -35,37 +44,65 @@ const SUGGESTIONS = [
   "What does the corpus suggest about the link between energy access and health outcomes?",
 ];
 
-/** Render inline markdown (bold, italic) so model emphasis marks never show as literal asterisks. */
-function renderInline(text: string, prefix = "") {
-  const boldParts = text.split(/(\*\*[^*]+\*\*)/g);
-  return boldParts.map((part, i) => {
-    const key = `${prefix}b${i}`;
-    if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
-      return <strong key={key}>{part.slice(2, -2)}</strong>;
-    }
-    const italicParts = part.split(/(\*[^*\s][^*]*\*)/g);
-    return italicParts.map((seg, j) => {
-      const k = `${key}-${j}`;
-      if (seg.length > 2 && seg.startsWith("*") && seg.endsWith("*")) {
-        return <em key={k}>{seg.slice(1, -1)}</em>;
+/** Inline markdown (bold, italic) with [pXXX] citations as highlighter tabs. */
+function renderInline(
+  text: string,
+  citationIndex: Map<string, number>,
+  onCitation: (id: string) => void,
+  onHover: (id: string) => void,
+  prefix = "",
+) {
+  const parts = text.split(/(\[p\d{3}\])/g);
+  return parts.map((part, i) => {
+    const key = `${prefix}-${i}`;
+    const cite = part.match(/^\[(p\d{3})\]$/);
+    if (cite) {
+      const id = cite[1]!;
+      const n = citationIndex.get(id);
+      if (n != null) {
+        return (
+          <CitationTab
+            key={key}
+            n={n}
+            label={id}
+            onOpen={() => onCitation(id)}
+            onHover={() => onHover(id)}
+          />
+        );
       }
-      return <span key={k}>{seg}</span>;
+      return <span key={key}>[{id}]</span>;
+    }
+    const boldParts = part.split(/(\*\*[^*]+\*\*)/g);
+    return boldParts.map((bp, j) => {
+      const bkey = `${key}b${j}`;
+      if (bp.startsWith("**") && bp.endsWith("**") && bp.length > 4) {
+        return <strong key={bkey}>{bp.slice(2, -2)}</strong>;
+      }
+      const italicParts = bp.split(/(\*[^*\s][^*]*\*)/g);
+      return italicParts.map((seg, k) => {
+        const ikey = `${bkey}-${k}`;
+        if (seg.length > 2 && seg.startsWith("*") && seg.endsWith("*")) {
+          return <em key={ikey}>{seg.slice(1, -1)}</em>;
+        }
+        return <span key={ikey}>{seg}</span>;
+      });
     });
   });
 }
 
 function Ask() {
-  const { retrieve } = useCorpus();
+  const { q } = Route.useSearch();
+  const { openEvidence, setEvidence, focusEvidence, setRailOpen } = useCorpusState();
   const ask = useServerFn(askKnowledgeBase);
-  const [question, setQuestion] = useState("");
+  const [question, setQuestion] = useState(q ?? "");
   const [mode, setMode] = useState<"answer" | "brief">("answer");
   const [retrieved, setRetrieved] = useState<Retrieved[]>([]);
   const [answer, setAnswer] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function run(q: string) {
-    const trimmed = q.trim();
+  async function run(text: string) {
+    const trimmed = text.trim();
     if (trimmed.length < 3 || loading) return;
     setLoading(true);
     setError("");
@@ -80,8 +117,11 @@ function Ask() {
           chunks: hits.map((h) => ({ id: h.post.id, text: h.post.chunk })),
         },
       });
-      if (result.ok) setAnswer(result.answer);
-      else setError(result.error);
+      if (result.ok) {
+        setAnswer(result.answer);
+        setEvidence(hits.map((h) => h.post));
+        if (window.innerWidth >= 1024) setRailOpen(true);
+      } else setError(result.error);
     } catch {
       setError("The request could not be completed. Please try again.");
     } finally {
@@ -89,125 +129,178 @@ function Ask() {
     }
   }
 
+  const { retrieve } = useCorpusStateSafe();
+
+  useEffect(() => {
+    if (q && q.trim().length >= 3) {
+      setQuestion(q);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (!retrieve) return null;
+
+  const citationIndex = new Map(retrieved.map((r, i) => [r.post.id, i + 1]));
+
+  function onCitation(id: string) {
+    openEvidence(retrieved.map((r) => r.post), id);
+  }
+
   return (
-    <Shell
-      title="Ask your data"
-      subtitle="Ask anything about the corpus — the answer is generated by AI and every claim links back to the posts it came from."
-    >
+    <Shell title="Ask">
       <form
         onSubmit={(e) => {
           e.preventDefault();
           void run(question);
         }}
-        className="paper-panel p-5"
+        className="flex flex-col gap-3 sm:flex-row"
       >
-        <label className="label-caps" htmlFor="q">
-          Natural language question
-        </label>
         <textarea
-          id="q"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          rows={3}
-          placeholder="e.g. What are the main concerns about renewable energy discussed by influencers in this dataset?"
-          className="mt-2 w-full resize-y rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring"
+          rows={2}
+          placeholder="e.g. What are the main concerns about renewable energy in this corpus?"
+          aria-label="Question"
+          className="flex-1 resize-y rounded-lg border border-input bg-specimen px-4 py-3 text-[15px] text-foreground outline-none placeholder:text-muted"
         />
-        <div className="mt-3 flex flex-wrap items-center gap-3">
+        <div className="flex gap-3">
           <select
             value={mode}
             onChange={(e) => setMode(e.target.value as "answer" | "brief")}
-            className="h-10 rounded-xl border border-input bg-card px-3 text-sm outline-none focus:border-ring"
+            aria-label="Answer format"
+            className="h-12 self-start rounded-lg border border-input bg-specimen px-3 text-sm outline-none"
           >
             <option value="answer">Cited answer</option>
-            <option value="brief">Structured decision brief</option>
+            <option value="brief">Decision brief</option>
           </select>
           <button
             type="submit"
             disabled={loading || question.trim().length < 3}
-            className="inline-flex h-10 items-center rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover disabled:opacity-50"
+            className="h-12 rounded-lg bg-highlight px-5 text-sm font-semibold text-ink transition-colors duration-150 hover:brightness-95 disabled:opacity-50"
           >
-            {loading ? "Synthesising…" : "Retrieve and synthesise"}
+            {loading ? "Reading the posts…" : "Ask"}
           </button>
-          <span className="label-caps">Retrieval k = 6</span>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {SUGGESTIONS.map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => {
-                setQuestion(s);
-                void run(s);
-              }}
-              className="rounded-full border border-border bg-secondary px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
-            >
-              {s}
-            </button>
-          ))}
         </div>
       </form>
+      <p className="label mt-2">Every claim is cited with the post it came from. Retrieval takes the 6 nearest posts.</p>
+      <p className="mt-3 flex flex-wrap gap-x-6 gap-y-1.5 text-sm">
+        {SUGGESTIONS.map((s) => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => {
+              setQuestion(s);
+              void run(s);
+            }}
+            className="text-left underline decoration-line-strong underline-offset-4 transition-colors duration-150 hover:decoration-ink"
+          >
+            {s}
+          </button>
+        ))}
+      </p>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-[1.25fr_1fr]">
-        <Panel title="Synthesised knowledge" hint="AI answer">
-          {error && <p className="text-sm text-negative">{error}</p>}
-          {loading && !answer && (
-            <p className="text-sm text-muted-foreground">
-              Retrieving the nearest metadata records and generating a cited synthesis…
+      <section className="mt-10 border-t border-line pt-8">
+        {error && <p className="text-sm text-negative">{error}</p>}
+        {loading && !answer && (
+          <p className="quote text-muted">Retrieving the nearest posts and reading them…</p>
+        )}
+        {!loading && !answer && !error && (
+          <p className="quote text-muted">
+            Ask a question and the answer appears here, grounded in the retrieved posts. Each citation
+            tab opens the supporting post in the evidence panel.
+          </p>
+        )}
+        {answer && (
+          <>
+            <p className="label flex items-center gap-3">
+              Grounded in {retrieved.length} posts
+              <button
+                type="button"
+                onClick={() => setRailOpen(true)}
+                className="rounded-md border border-line-strong px-2 py-0.5 text-[13px] text-foreground transition-colors duration-150 hover:bg-page lg:hidden"
+              >
+                Show posts
+              </button>
             </p>
-          )}
-          {!loading && !answer && !error && (
-            <p className="text-sm text-muted-foreground">
-              Ask a question to generate an answer grounded in the retrieved metadata records. Every
-              claim is cited with its post identifier.
-            </p>
-          )}
-          {answer && (
-            <div className="space-y-3 text-sm leading-relaxed text-foreground">
-              {answer.split("\n").filter(Boolean).map((line, i) =>
-                line.startsWith("##") ? (
-                  <h4 key={i} className="pt-2 text-base font-semibold">
-                    {line.replace(/^#+\s*/, "")}
-                  </h4>
-                ) : (
-                  <p key={i}>
-                    {renderInline(line.replace(/^[-*]\s+/, "• "))}
-                  </p>
-                ),
-              )}
+            <div className="quote mt-3 space-y-3">
+              {answer
+                .split("\n")
+                .filter(Boolean)
+                .map((line, i) =>
+                  line.startsWith("##") ? (
+                    <h4 key={i} className="pt-2 text-[16px] font-semibold text-foreground">
+                      {line.replace(/^#+\s*/, "")}
+                    </h4>
+                  ) : (
+                    <p key={i}>
+                      {renderInline(
+                        line.replace(/^[-*]\s+/, "• "),
+                        citationIndex,
+                        onCitation,
+                        focusEvidence,
+                        `l${i}`,
+                      )}
+                    </p>
+                  ),
+                )}
             </div>
-          )}
-        </Panel>
+          </>
+        )}
+      </section>
 
-        <Panel title="Retrieved evidence" hint="Source posts">
-          {retrieved.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Retrieved records and their similarity scores will appear here.
-            </p>
-          ) : (
-            <ol className="space-y-3">
-              {retrieved.map((r) => (
-                <li key={r.post.id} className="border-b border-rule/60 pb-3 last:border-0">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="font-mono text-xs text-foreground">
-                      [{r.post.id}] {r.post.author}
-                    </span>
-                    <span className="font-mono text-[11px] text-muted-foreground">
-                      score {r.score.toFixed(3)} · graph +{r.graphBoost.toFixed(3)}
-                    </span>
-                  </div>
-                  <p className="mt-1 line-clamp-3 text-sm text-muted-foreground">
-                    {r.post.caption}
-                  </p>
-                  <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
+      <section className="mt-10 border-t border-line pt-8">
+        <h3 className="text-[18px] font-semibold text-foreground">Retrieved posts</h3>
+        <p className="label mt-1">Also shown in the evidence panel, with the words behind each answer.</p>
+        {retrieved.length === 0 ? (
+          <p className="label mt-4">Nothing retrieved yet.</p>
+        ) : (
+          <ol className="mt-4 space-y-0">
+            {retrieved.map((r) => (
+              <li
+                key={r.post.id}
+                className="grid grid-cols-[auto_1fr] items-baseline gap-x-4 border-b border-line py-2.5 text-sm last:border-0"
+              >
+                <span className="font-semibold text-foreground">
+                  [{citationIndex.get(r.post.id)}] {r.post.author}
+                </span>
+                <span className="min-w-0">
+                  <span className="line-clamp-2 text-muted">{r.post.caption}</span>
+                  <span className="label mt-0.5 flex flex-wrap items-center gap-x-3">
                     <span>{r.post.topic.label}</span>
-                    <SentimentPill value={r.post.sentiment} />
-                  </div>
-                </li>
-              ))}
-            </ol>
-          )}
-        </Panel>
-      </div>
+                    <SentimentValue value={r.post.sentiment} />
+                    <span>match {r.score.toFixed(2)}</span>
+                    <button
+                      type="button"
+                      onClick={() => onCitation(r.post.id)}
+                      className="underline decoration-line-strong underline-offset-4 transition-colors duration-150 hover:text-foreground"
+                    >
+                      show in evidence
+                    </button>
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
     </Shell>
   );
 }
+
+/* retrieve() comes from the corpus context; keep the hook call order stable. */
+function useCorpusStateSafe() {
+  const ctx = useCorpusStateBridge();
+  return { retrieve: ctx?.retrieve };
+}
+
+function useCorpusStateBridge() {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  return require_bridge();
+}
+
+function require_bridge() {
+  return BRIDGE.retrieve();
+}
+
+import { useCorpusState as useCorpusStateImpl } from "@/lib/corpus-context";
+const BRIDGE = { retrieve: () => useCorpusStateImpl() as { retrieve: never } | null };

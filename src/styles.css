@@ -301,6 +301,27 @@
   transform: translateX(0);
 }
 
+/* ---------------------------------------------------------------- faq */
+
+.faq summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq summary::after {
+  content: "+";
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.faq details[open] summary::after {
+  content: "–";
+}
+
 /* -------------------------------------------------- reduced motion safety */
 
 @media (prefers-reduced-motion: reduce) {
