@@ -116,6 +116,39 @@
   color: var(--muted);
 }
 
+/* Legacy alias for the pre-restyle card class. */
+@utility paper-panel {
+  background-color: var(--specimen);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
+/* Restrained chart palette — mostly ink steps plus the signal colors. */
+:root {
+  --chart-1: var(--ink);
+  --chart-2: var(--highlight);
+  --chart-3: var(--positive);
+  --chart-4: var(--negative);
+  --chart-5: var(--neutral);
+  --chart-6: rgba(15, 58, 68, 0.85);
+  --chart-7: rgba(15, 58, 68, 0.7);
+  --chart-8: rgba(15, 58, 68, 0.55);
+  --chart-9: rgba(15, 58, 68, 0.45);
+  --chart-10: rgba(15, 58, 68, 0.35);
+  --chart-11: rgba(15, 58, 68, 0.28);
+  --chart-12: rgba(15, 58, 68, 0.22);
+  --chart-13: rgba(15, 58, 68, 0.16);
+  --chart-14: rgba(15, 58, 68, 0.1);
+}
+
+@theme inline {
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+}
+
 /* Long-form reading: captions, quoted text, AI answers. */
 @utility quote {
   font-family: var(--font-serif);
