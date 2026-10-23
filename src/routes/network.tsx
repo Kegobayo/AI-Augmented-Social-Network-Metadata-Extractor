@@ -151,7 +151,9 @@ function Network() {
                     style={{ width: `${Math.max(2, (h.reach / (HASHTAG_STATS[0]?.reach ?? 1)) * 100)}%` }}
                   />
                 </span>
-                <span className="w-14 shrink-0 text-right text-muted">{(h.reach / 1000).toFixed(1)}k</span>
+                <span className="w-16 shrink-0 text-right text-muted">
+                  {h.reach >= 1_000_000 ? `${(h.reach / 1_000_000).toFixed(1)}m` : `${(h.reach / 1000).toFixed(1)}k`}
+                </span>
               </div>
             ))}
           </div>
