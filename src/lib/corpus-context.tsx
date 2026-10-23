@@ -3,7 +3,7 @@ import type { User } from "@supabase/supabase-js";
 
 import { supabase } from "@/integrations/supabase/client";
 import { FOLLOW_EDGES, RAW_POSTS, type RawPost } from "@/data/corpus";
-import { buildCorpus, DEMO_CORPUS, type Corpus } from "@/lib/enrichment";
+import { buildCorpus, DEMO_CORPUS, type Corpus, type EnrichedPost } from "@/lib/enrichment";
 import type { Database } from "@/integrations/supabase/types";
 
 type SavedRow = Database["public"]["Tables"]["saved_posts"]["Row"];
@@ -75,6 +75,14 @@ type Ctx = {
   setSource: (s: CorpusSource) => void;
   days: number | null;
   setDays: (d: number | null) => void;
+  /* Evidence rail state: the posts behind whatever the user selected. */
+  evidence: EnrichedPost[];
+  evidenceFocus: string | null;
+  railOpen: boolean;
+  setRailOpen: (open: boolean) => void;
+  setEvidence: (posts: EnrichedPost[]) => void;
+  focusEvidence: (postId: string | null) => void;
+  openEvidence: (posts: EnrichedPost[], focusId?: string) => void;
 };
 
 const CorpusContext = createContext<Ctx>({
@@ -88,6 +96,13 @@ const CorpusContext = createContext<Ctx>({
   setSource: () => {},
   days: null,
   setDays: () => {},
+  evidence: [],
+  evidenceFocus: null,
+  railOpen: false,
+  setRailOpen: () => {},
+  setEvidence: () => {},
+  focusEvidence: () => {},
+  openEvidence: () => {},
 });
 
 export function CorpusProvider({ children }: { children: ReactNode }) {
@@ -97,6 +112,9 @@ export function CorpusProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [source, setSource] = useState<CorpusSource>("auto");
   const [days, setDays] = useState<number | null>(null);
+  const [evidence, setEvidenceState] = useState<EnrichedPost[]>([]);
+  const [evidenceFocus, setEvidenceFocus] = useState<string | null>(null);
+  const [railOpen, setRailOpen] = useState(false);
 
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((_e, session) => {
@@ -126,6 +144,20 @@ export function CorpusProvider({ children }: { children: ReactNode }) {
     void refresh();
   }, [refresh]);
 
+  const setEvidence = useCallback((posts: EnrichedPost[]) => {
+    setEvidenceState(posts);
+  }, []);
+
+  const focusEvidence = useCallback((postId: string | null) => {
+    setEvidenceFocus(postId);
+  }, []);
+
+  const openEvidence = useCallback((posts: EnrichedPost[], focusId?: string) => {
+    setEvidenceState(posts);
+    setEvidenceFocus(focusId ?? null);
+    setRailOpen(true);
+  }, []);
+
   const rangedSaved = useMemo(() => withinDays(saved, days, (r) => r.posted_at), [saved, days]);
   const rangedRaw = useMemo(() => withinDays(RAW_POSTS, days, (p) => p.timestamp), [days]);
 
@@ -138,7 +170,25 @@ export function CorpusProvider({ children }: { children: ReactNode }) {
 
   return (
     <CorpusContext.Provider
-      value={{ corpus, user, authReady, saved, loading, refresh, source, setSource, days, setDays }}
+      value={{
+        corpus,
+        user,
+        authReady,
+        saved,
+        loading,
+        refresh,
+        source,
+        setSource,
+        days,
+        setDays,
+        evidence,
+        evidenceFocus,
+        railOpen,
+        setRailOpen,
+        setEvidence,
+        focusEvidence,
+        openEvidence,
+      }}
     >
       {children}
     </CorpusContext.Provider>
