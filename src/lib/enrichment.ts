@@ -259,7 +259,7 @@ function enrich(post: RawPost): EnrichedPost {
     sentiment: polarity,
     sentimentLabel: label,
     emotion,
-    engagementRate: Number(((interactions / post.followers) * 100).toFixed(2)),
+    engagementRate: Number(Math.min(100, (interactions / post.followers) * 100).toFixed(1)),
     saveRatio: Number(((post.saves / Math.max(1, post.likes)) * 100).toFixed(1)),
     amplification: Number(((post.shares / Math.max(1, post.likes)) * 100).toFixed(1)),
     embedding: embed(fullText),
