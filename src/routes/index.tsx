@@ -15,7 +15,6 @@ import {
 
 import { Panel, Shell, Stat, SentimentPill } from "@/components/shell";
 import { InstagramInsights } from "@/components/instagram-insights";
-import { DatasetChat } from "@/components/dataset-chat";
 import { useCorpus } from "@/lib/corpus-context";
 
 export const Route = createFileRoute("/")({
@@ -84,8 +83,6 @@ function Dashboard() {
           "Showing your saved corpus."
         )}
       </p>
-
-      <DatasetChat />
 
       <InstagramInsights onAnalysed={setAnalysedTopic} />
 
