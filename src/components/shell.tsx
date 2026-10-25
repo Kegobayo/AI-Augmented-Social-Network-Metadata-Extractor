@@ -27,6 +27,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { MetricLabel } from "@/components/metric-hint";
 import { useCorpusState } from "@/lib/corpus-context";
 
 const NAV = [
@@ -215,7 +216,7 @@ export function Panel({
   className = "",
 }: {
   title: string;
-  hint?: string;
+  hint?: ReactNode;
   children: ReactNode;
   className?: string;
 }) {
@@ -230,13 +231,23 @@ export function Panel({
   );
 }
 
-export function Stat({ value, label }: { value: string | number; label: string }) {
+export function Stat({
+  value,
+  label,
+  hint,
+}: {
+  value: string | number;
+  label: string;
+  hint?: string;
+}) {
   return (
     <div className="paper-panel px-5 py-4">
       <div className="text-[28px] font-bold leading-8 tracking-tight text-foreground [font-variant-numeric:tabular-nums]">
         {value}
       </div>
-      <div className="label-caps mt-1.5">{label}</div>
+      <div className="label-caps mt-1.5">
+        {hint ? <MetricLabel label={label} text={hint} side="bottom" /> : label}
+      </div>
     </div>
   );
 }
