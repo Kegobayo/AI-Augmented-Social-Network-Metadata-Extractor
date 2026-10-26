@@ -9,3 +9,4 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 - MCP server lives in src/lib/mcp (one tool per file, OAuth via Lovable Cloud auth); sign-in exists only at /login for assistant connections — the app itself stays open.
+- Report exports are browser-generated from the selected corpus and existing AI output; prepare PDF blobs before the download click to preserve mobile user activation and avoid extra AI calls.
