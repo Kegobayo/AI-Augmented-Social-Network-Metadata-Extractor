@@ -11,7 +11,7 @@ function palette() {
     ctx.clearRect(0, 0, 1, 1);
     ctx.fillStyle = styles.getPropertyValue(token).trim();
     ctx.fillRect(0, 0, 1, 1);
-    const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+    const [r = 0, g = 0, b = 0] = ctx.getImageData(0, 0, 1, 1).data;
     return rgb(r / 255, g / 255, b / 255);
   };
   return { ink: color("--foreground"), muted: color("--muted-foreground"), accent: color("--primary"), paper: color("--card"), rule: color("--border") };
@@ -44,14 +44,14 @@ export async function reportPdf(report: ReportData): Promise<Blob> {
   const response = await fetch("/fonts/report-sans.ttf");
   if (!response.ok) throw new Error("The report font could not be loaded.");
   const font = await pdf.embedFont(await response.arrayBuffer(), { subset: true });
+  const supported = new Set(font.getCharacterSet());
+  const safeText = (value: string) => Array.from(value).map((c) => supported.has(c.codePointAt(0) ?? 0) ? c : "?").join("");
   const colors = palette();
   let page = pdf.addPage([595.28, 841.89]);
   let y = 730;
   const text = (value: string, x: number, top: number, size = 10, color = colors.ink) => {
     // A missing glyph is explicitly replaced, rather than crashing the export.
-    const supported = new Set(font.getCharacterSet());
-    const safe = Array.from(value).map((c) => supported.has(c.codePointAt(0) ?? 0) ? c : "?").join("");
-    page.drawText(safe, { x, y: top, font, size, color });
+    page.drawText(safeText(value), { x, y: top, font, size, color });
   };
   const header = () => {
     page.drawRectangle({ x: 0, y: 0, width: 595.28, height: 841.89, color: colors.paper });
@@ -65,7 +65,7 @@ export async function reportPdf(report: ReportData): Promise<Blob> {
     page = pdf.addPage([595.28, 841.89]); header(); y = 730;
   };
   const paragraph = (value: string, size = 10, color = colors.ink) => {
-    for (const line of wrap(value, font, size, 515)) {
+    for (const line of wrap(safeText(value), font, size, 515)) {
       ensure(size + 7); text(line, 40, y, size, color); y -= size + 7;
     }
     y -= 5;
