@@ -16,6 +16,8 @@ import {
 import { Panel, Shell, Stat, SentimentPill } from "@/components/shell";
 import { InstagramInsights } from "@/components/instagram-insights";
 import { useCorpus } from "@/lib/corpus-context";
+import { ReportExport } from "@/components/report-export";
+import type { ReportSummary } from "@/lib/report";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -42,6 +44,7 @@ export const Route = createFileRoute("/")({
 function Dashboard() {
   const { AUTHORS, CORPUS_STATS, ENRICHED, HASHTAG_STATS, entityFrequency, sentimentTimeline, topicDistribution, isDemo } = useCorpus();
   const [analysedTopic, setAnalysedTopic] = useState<string | null>(null);
+  const [reportSummary, setReportSummary] = useState<ReportSummary | null>(null);
   const topics = topicDistribution()
     .map((t) => (t.id === analysedTopic ? { ...t, count: t.count + 1, analysed: true } : { ...t, analysed: false }))
     .filter((t) => t.count > 0)
@@ -58,6 +61,7 @@ function Dashboard() {
       title="Overview"
       subtitle={`${CORPUS_STATS.posts} enriched posts from ${CORPUS_STATS.authors} accounts, ${CORPUS_STATS.span.from} to ${CORPUS_STATS.span.to}.`}
     >
+      <ReportExport summary={reportSummary} />
       <div className="grid grid-cols-2 gap-4 md:grid-cols-6 lg:gap-6">
         <Stat value={CORPUS_STATS.posts} label="Posts ingested" />
         <Stat value={CORPUS_STATS.authors} label="Accounts" />
@@ -84,7 +88,7 @@ function Dashboard() {
         )}
       </p>
 
-      <InstagramInsights onAnalysed={setAnalysedTopic} />
+      <InstagramInsights onAnalysed={setAnalysedTopic} onSummary={setReportSummary} />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <Panel title="Topic distribution" hint={analysedTopic ? "Includes analysed post" : "By theme"}>

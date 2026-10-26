@@ -4,6 +4,7 @@ import { analyzeInstagramPost } from "@/lib/instagram.functions";
 import { saveAnalyzedPost } from "@/lib/instagram-graph.functions";
 import { useCorpusState } from "@/lib/corpus-context";
 import { Panel, SentimentPill } from "@/components/shell";
+import type { ReportSummary } from "@/lib/report";
 
 type Result = Awaited<ReturnType<typeof analyzeInstagramPost>>;
 
@@ -30,7 +31,7 @@ function renderMarkdown(md: string) {
   });
 }
 
-export function InstagramInsights({ onAnalysed }: { onAnalysed?: (topicId: string | null) => void } = {}) {
+export function InstagramInsights({ onAnalysed, onSummary }: { onAnalysed?: (topicId: string | null) => void; onSummary?: (summary: ReportSummary | null) => void } = {}) {
   const analyze = useServerFn(analyzeInstagramPost);
   const save = useServerFn(saveAnalyzedPost);
   const { refresh } = useCorpusState();
@@ -72,12 +73,14 @@ export function InstagramInsights({ onAnalysed }: { onAnalysed?: (topicId: strin
     setError(null);
     setResult(null);
     onAnalysed?.(null);
+    onSummary?.(null);
     setSaveState(null);
     try {
       const r = await analyze({ data: { url, caption: caption || undefined } });
       if (r.ok) {
         setResult(r);
         onAnalysed?.(r.analysis.topicId);
+        if (r.insight) onSummary?.({ text: r.insight, source: `Instagram post analysis · ${url}`, postIds: [] });
       }
       else {
         setError(r.error);
