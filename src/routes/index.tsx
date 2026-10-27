@@ -13,10 +13,11 @@ import {
   YAxis,
 } from "recharts";
 
-import { Panel, Shell, Stat, SentimentPill } from "@/components/shell";
+import { MetricHelp, Panel, Shell, Stat, SentimentPill } from "@/components/shell";
 import { InstagramInsights } from "@/components/instagram-insights";
 import { useCorpus } from "@/lib/corpus-context";
 import { ReportExport } from "@/components/report-export";
+import { METRIC_HELP } from "@/lib/metric-help";
 import type { ReportSummary } from "@/lib/report";
 
 export const Route = createFileRoute("/")({
@@ -63,14 +64,23 @@ function Dashboard() {
     >
       <ReportExport summary={reportSummary} />
       <div className="grid grid-cols-2 gap-4 md:grid-cols-6 lg:gap-6">
-        <Stat value={CORPUS_STATS.posts} label="Posts ingested" />
-        <Stat value={CORPUS_STATS.authors} label="Accounts" />
-        <Stat value={CORPUS_STATS.ties} label="Follower ties" />
-        <Stat value={CORPUS_STATS.hashtags} label="Distinct hashtags" />
-        <Stat value={CORPUS_STATS.entities} label="Entities extracted" />
+        <Stat value={CORPUS_STATS.posts} label="Posts ingested" help={METRIC_HELP.posts} />
+        <Stat value={CORPUS_STATS.authors} label="Accounts" help={METRIC_HELP.accounts} />
+        <Stat value={CORPUS_STATS.ties} label="Follower ties" help={METRIC_HELP.ties} />
+        <Stat
+          value={CORPUS_STATS.hashtags}
+          label="Distinct hashtags"
+          help={METRIC_HELP.hashtags}
+        />
+        <Stat
+          value={CORPUS_STATS.entities}
+          label="Entities extracted"
+          help={METRIC_HELP.entities}
+        />
         <Stat
           value={(CORPUS_STATS.interactions / 1000).toFixed(0) + "k"}
           label="Interactions"
+          help={METRIC_HELP.interactions}
         />
       </div>
 
@@ -145,7 +155,11 @@ function Dashboard() {
           </ul>
         </Panel>
 
-        <Panel title="Sentiment trend across the collection window" hint="Weekly mean">
+        <Panel
+          title="Sentiment trend across the collection window"
+          hint="Weekly mean"
+          hintHelp={METRIC_HELP.sentiment}
+        >
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={timeline} margin={{ left: -16, right: 12, top: 8 }}>
               <CartesianGrid stroke="var(--rule)" />
@@ -175,14 +189,28 @@ function Dashboard() {
           </p>
         </Panel>
 
-        <Panel title="Most influential accounts" hint="Graph centrality">
+        <Panel
+          title="Most influential accounts"
+          hint="Graph centrality"
+          hintHelp={METRIC_HELP.graphCentrality}
+        >
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-rule text-left">
                 <th className="label-caps pb-2">Account</th>
                 <th className="label-caps pb-2">Community</th>
-                <th className="label-caps pb-2 text-right">In-ties</th>
-                <th className="label-caps pb-2 text-right">Influence</th>
+                <th className="label-caps pb-2 text-right">
+                  <span className="flex items-center justify-end gap-1.5">
+                    In-ties
+                    <MetricHelp label="In-ties" text={METRIC_HELP.inTies} />
+                  </span>
+                </th>
+                <th className="label-caps pb-2 text-right">
+                  <span className="flex items-center justify-end gap-1.5">
+                    Influence
+                    <MetricHelp label="Influence" text={METRIC_HELP.influence} />
+                  </span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -206,7 +234,11 @@ function Dashboard() {
           </Link>
         </Panel>
 
-        <Panel title="Extracted entities by frequency" hint="Top mentions">
+        <Panel
+          title="Extracted entities by frequency"
+          hint="Top mentions"
+          hintHelp={METRIC_HELP.entities}
+        >
           <div className="flex flex-wrap gap-2">
             {entities.map((e) => (
               <span
@@ -236,16 +268,36 @@ function Dashboard() {
         </Panel>
       </div>
 
-      <Panel className="mt-6" title="Highest engagement rate (interactions ÷ followers)" hint="Per follower">
+      <Panel
+        className="mt-6"
+        title="Highest engagement rate (interactions ÷ followers)"
+        hint="Per follower"
+        hintHelp={METRIC_HELP.engagementRate}
+      >
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-rule text-left">
               <th className="label-caps pb-2">ID</th>
               <th className="label-caps pb-2">Account</th>
               <th className="label-caps pb-2">Topic</th>
-              <th className="label-caps pb-2 text-right">Eng. rate</th>
-              <th className="label-caps pb-2 text-right">Save ratio</th>
-              <th className="label-caps pb-2 text-right">Sentiment</th>
+              <th className="label-caps pb-2 text-right">
+                <span className="flex items-center justify-end gap-1.5">
+                  Eng. rate
+                  <MetricHelp label="Engagement rate" text={METRIC_HELP.engagementRate} />
+                </span>
+              </th>
+              <th className="label-caps pb-2 text-right">
+                <span className="flex items-center justify-end gap-1.5">
+                  Save ratio
+                  <MetricHelp label="Save ratio" text={METRIC_HELP.saveRatio} />
+                </span>
+              </th>
+              <th className="label-caps pb-2 text-right">
+                <span className="flex items-center justify-end gap-1.5">
+                  Sentiment
+                  <MetricHelp label="Sentiment" text={METRIC_HELP.sentiment} />
+                </span>
+              </th>
             </tr>
           </thead>
           <tbody>
