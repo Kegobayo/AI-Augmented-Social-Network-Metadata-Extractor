@@ -199,13 +199,13 @@ function Dashboard() {
               <tr className="border-b border-rule text-left">
                 <th className="label-caps pb-2">Account</th>
                 <th className="label-caps pb-2">Community</th>
-                <th className="label-caps pb-2 text-right">
+                <th className="label-caps pb-2 pl-4 text-right">
                   <span className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                     In-ties
                     <MetricHelp label="In-ties" text={METRIC_HELP.inTies} />
                   </span>
                 </th>
-                <th className="label-caps pb-2 text-right">
+                <th className="label-caps pb-2 pl-4 text-right">
                   <span className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                     Influence
                     <MetricHelp label="Influence" text={METRIC_HELP.influence} />
@@ -280,19 +280,19 @@ function Dashboard() {
               <th className="label-caps pb-2">ID</th>
               <th className="label-caps pb-2">Account</th>
               <th className="label-caps pb-2">Topic</th>
-              <th className="label-caps pb-2 text-right">
+              <th className="label-caps pb-2 pl-4 text-right">
                 <span className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                   Eng. rate
                   <MetricHelp label="Engagement rate" text={METRIC_HELP.engagementRate} />
                 </span>
               </th>
-              <th className="label-caps pb-2 text-right">
+              <th className="label-caps pb-2 pl-4 text-right">
                 <span className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                   Save ratio
                   <MetricHelp label="Save ratio" text={METRIC_HELP.saveRatio} />
                 </span>
               </th>
-              <th className="label-caps pb-2 text-right">
+              <th className="label-caps pb-2 pl-4 text-right">
                 <span className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                   Sentiment
                   <MetricHelp label="Sentiment" text={METRIC_HELP.sentiment} />

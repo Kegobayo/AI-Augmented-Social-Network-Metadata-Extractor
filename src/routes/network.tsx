@@ -137,25 +137,25 @@ function Network() {
                 <tr className="border-b border-rule text-left">
                   <th className="label-caps pb-2">Account</th>
                   <th className="label-caps pb-2">Type</th>
-                  <th className="label-caps pb-2 text-right">
+                  <th className="label-caps pb-2 pl-4 text-right">
                     <span className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                       In
                       <MetricHelp label="In-ties" text={METRIC_HELP.inTies} />
                     </span>
                   </th>
-                  <th className="label-caps pb-2 text-right">
+                  <th className="label-caps pb-2 pl-4 text-right">
                     <span className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                       Out
                       <MetricHelp label="Out-ties" text={METRIC_HELP.outTies} />
                     </span>
                   </th>
-                  <th className="label-caps pb-2 text-right">
+                  <th className="label-caps pb-2 pl-4 text-right">
                     <span className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                       Infl.
                       <MetricHelp label="Influence" text={METRIC_HELP.influence} />
                     </span>
                   </th>
-                  <th className="label-caps pb-2 text-right">
+                  <th className="label-caps pb-2 pl-4 text-right">
                     <span className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                       Sent.
                       <MetricHelp label="Sentiment" text={METRIC_HELP.accountSentiment} />
@@ -204,13 +204,13 @@ function Network() {
             <thead>
               <tr className="border-b border-rule text-left">
                 <th className="label-caps pb-2">Tag pair</th>
-                <th className="label-caps pb-2 text-right">
+                <th className="label-caps pb-2 pl-4 text-right">
                   <span className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                     Co-occurrences
                     <MetricHelp label="Co-occurrences" text={METRIC_HELP.coOccurrences} />
                   </span>
                 </th>
-                <th className="label-caps pb-2">
+                <th className="label-caps pb-2 pl-4">
                   <span className="flex items-center gap-1.5 whitespace-nowrap">
                     Strength
                     <MetricHelp label="Strength" text={METRIC_HELP.strength} />

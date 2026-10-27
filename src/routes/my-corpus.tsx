@@ -161,19 +161,19 @@ function MyCorpus() {
                 <th className="label-caps pb-2">Date</th>
                 <th className="label-caps pb-2">Account</th>
                 <th className="label-caps pb-2">Caption</th>
-                <th className="label-caps pb-2 text-right">
+                <th className="label-caps pb-2 pl-4 text-right">
                   <span className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                     Likes
                     <MetricHelp label="Likes" text={METRIC_HELP.interactions} />
                   </span>
                 </th>
-                <th className="label-caps pb-2 text-right">
+                <th className="label-caps pb-2 pl-4 text-right">
                   <span className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                     Reach
                     <MetricHelp label="Reach" text={METRIC_HELP.reach} />
                   </span>
                 </th>
-                <th className="label-caps pb-2 text-right">
+                <th className="label-caps pb-2 pl-4 text-right">
                   <span className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                     Sentiment
                     <MetricHelp label="Sentiment" text={METRIC_HELP.sentiment} />
