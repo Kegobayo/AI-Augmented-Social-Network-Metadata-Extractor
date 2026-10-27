@@ -134,7 +134,7 @@ function Row({
   return (
     <tr className="border-b border-rule/60 last:border-0 align-top">
       <td className="label-caps w-44 py-1.5 pr-3">
-        <span className="flex items-center gap-1.5">
+        <span className="flex items-center gap-1.5 whitespace-nowrap">
           {field}
           {help ? <MetricHelp label={field} text={help} align="start" /> : null}
         </span>
