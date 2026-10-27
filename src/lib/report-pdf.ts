@@ -65,7 +65,10 @@ export async function reportPdf(report: ReportData): Promise<Blob> {
     page = pdf.addPage([595.28, 841.89]); header(); y = 730;
   };
   const paragraph = (value: string, size = 10, color = colors.ink) => {
-    for (const line of wrap(safeText(value), font, size, 515)) {
+    const lines = wrap(safeText(value), font, size, 515);
+    const height = lines.length * (size + 7) + 5;
+    if (height <= 668) ensure(height);
+    for (const line of lines) {
       ensure(size + 7); text(line, 40, y, size, color); y -= size + 7;
     }
     y -= 5;
@@ -105,8 +108,10 @@ export async function reportPdf(report: ReportData): Promise<Blob> {
   heading("AI summary");
   if (!report.aiSummaries.length) paragraph("No AI summary available. Generate an answer or analyse a post before exporting to include one.");
   for (const summary of report.aiSummaries) {
+    ensure(95);
     paragraph(summary.source, 11, colors.accent);
     for (const line of summary.text.split("\n").filter(Boolean)) {
+      if (/^#+\s/.test(line)) ensure(75);
       paragraph(line.replace(/^#+\s*/, "").replace(/\*\*/g, ""));
     }
     if (summary.postIds.length) paragraph(`Source posts: ${summary.postIds.join(", ")}`, 9, colors.muted);
