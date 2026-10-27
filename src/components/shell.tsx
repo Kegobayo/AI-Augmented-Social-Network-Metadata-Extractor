@@ -238,7 +238,7 @@ export function MetricHelp({
         </TooltipTrigger>
         <TooltipContent
           side="top"
-          align="center"
+          align={align}
           className="max-w-[18rem] rounded-lg border border-border bg-popover px-3 py-2 text-xs leading-relaxed font-normal text-popover-foreground shadow-lg"
         >
           {text}
@@ -293,7 +293,7 @@ export function Stat({
       </div>
       <div className="label-caps mt-1.5 flex items-center gap-1.5">
         {label}
-        {help ? <MetricHelp label={label} text={help} /> : null}
+        {help ? <MetricHelp label={label} text={help} align="start" /> : null}
       </div>
     </div>
   );
