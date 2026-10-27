@@ -1,2 +1,2 @@
-- [ ] Add branded report exports with sentiment trends, top entities, and available AI summaries.
-- [ ] Verify actual downloads, PDF layout, and current app errors.
+- [x] Add branded report exports with sentiment trends, top entities, and available AI summaries.
+- [x] Verify actual downloads, PDF layout, and current app errors.
