@@ -137,7 +137,7 @@ function Ask() {
           >
             {loading ? "Synthesising…" : "Retrieve and synthesise"}
           </button>
-          <span className="label-caps flex items-center gap-1.5">
+          <span className="label-caps flex items-center gap-1.5 whitespace-nowrap">
             Retrieval k = 6
             <MetricHelp label="Retrieval k" text={METRIC_HELP.retrievalK} />
           </span>

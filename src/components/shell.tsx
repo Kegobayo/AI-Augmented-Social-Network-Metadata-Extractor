@@ -266,7 +266,7 @@ export function Panel({
       <div className="mb-4 flex items-baseline justify-between gap-3">
         <h3 className="text-base font-semibold text-foreground">{title}</h3>
         {hint ? (
-          <span className="label-caps flex items-center gap-1.5">
+          <span className="label-caps flex items-center gap-1.5 whitespace-nowrap">
             {hint}
             {hintHelp ? <MetricHelp label={hint} text={hintHelp} /> : null}
           </span>
@@ -291,7 +291,7 @@ export function Stat({
       <div className="text-[28px] font-bold leading-8 tracking-tight text-foreground [font-variant-numeric:tabular-nums]">
         {value}
       </div>
-      <div className="label-caps mt-1.5 flex items-center gap-1.5">
+      <div className="label-caps mt-1.5 flex items-center gap-1.5 whitespace-nowrap">
         {label}
         {help ? <MetricHelp label={label} text={help} align="start" /> : null}
       </div>
