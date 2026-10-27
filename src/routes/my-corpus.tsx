@@ -2,8 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 
-import { Panel, Shell, SentimentPill, Stat } from "@/components/shell";
+import { MetricHelp, Panel, Shell, SentimentPill, Stat } from "@/components/shell";
 import { useCorpusState } from "@/lib/corpus-context";
+import { METRIC_HELP } from "@/lib/metric-help";
 import { connectInstagram, getConnection, removeSavedPost, syncInstagram, unlinkInstagram } from "@/lib/instagram-graph.functions";
 
 export const Route = createFileRoute("/my-corpus")({
@@ -84,10 +85,22 @@ function MyCorpus() {
   return (
     <Shell title="My corpus" subtitle={`Shared corpus, open to everyone. Saved posts power the dashboard, corpus browser, network map and queries.`}>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat value={saved.length} label="Saved posts" />
-        <Stat value={corpus.isDemo ? 0 : corpus.AUTHORS.length} label="Accounts" />
-        <Stat value={corpus.isDemo ? 0 : corpus.EDGES.length} label="Mention ties" />
-        <Stat value={corpus.isDemo ? 0 : corpus.HASHTAG_STATS.length} label="Hashtags" />
+        <Stat value={saved.length} label="Saved posts" help={METRIC_HELP.posts} />
+        <Stat
+          value={corpus.isDemo ? 0 : corpus.AUTHORS.length}
+          label="Accounts"
+          help={METRIC_HELP.accounts}
+        />
+        <Stat
+          value={corpus.isDemo ? 0 : corpus.EDGES.length}
+          label="Mention ties"
+          help={METRIC_HELP.mentionTies}
+        />
+        <Stat
+          value={corpus.isDemo ? 0 : corpus.HASHTAG_STATS.length}
+          label="Hashtags"
+          help={METRIC_HELP.hashtags}
+        />
       </div>
 
       <Panel className="mt-6" title="Instagram account" hint="Official Instagram API">
@@ -148,9 +161,24 @@ function MyCorpus() {
                 <th className="label-caps pb-2">Date</th>
                 <th className="label-caps pb-2">Account</th>
                 <th className="label-caps pb-2">Caption</th>
-                <th className="label-caps pb-2 text-right">Likes</th>
-                <th className="label-caps pb-2 text-right">Reach</th>
-                <th className="label-caps pb-2 text-right">Sentiment</th>
+                <th className="label-caps pb-2 text-right">
+                  <span className="flex items-center justify-end gap-1.5">
+                    Likes
+                    <MetricHelp label="Likes" text={METRIC_HELP.interactions} />
+                  </span>
+                </th>
+                <th className="label-caps pb-2 text-right">
+                  <span className="flex items-center justify-end gap-1.5">
+                    Reach
+                    <MetricHelp label="Reach" text={METRIC_HELP.reach} />
+                  </span>
+                </th>
+                <th className="label-caps pb-2 text-right">
+                  <span className="flex items-center justify-end gap-1.5">
+                    Sentiment
+                    <MetricHelp label="Sentiment" text={METRIC_HELP.sentiment} />
+                  </span>
+                </th>
                 <th />
               </tr>
             </thead>
