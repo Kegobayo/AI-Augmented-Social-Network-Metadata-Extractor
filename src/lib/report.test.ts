@@ -1,3 +1,4 @@
+/// <reference types="bun" />
 import { describe, it, expect } from "bun:test";
 import { DEMO_CORPUS } from "./enrichment";
 import { createReport, reportCsv } from "./report";
