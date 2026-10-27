@@ -215,7 +215,15 @@ export function Shell({
 }
 
 /** Small "?" marker that explains a metric on hover, focus or tap. */
-export function MetricHelp({ label, text }: { label: string; text: string }) {
+export function MetricHelp({
+  label,
+  text,
+  align = "center",
+}: {
+  label: string;
+  text: string;
+  align?: "center" | "start" | "end";
+}) {
   return (
     <TooltipProvider delayDuration={120}>
       <Tooltip>
