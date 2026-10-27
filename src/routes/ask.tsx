@@ -2,9 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 
-import { Panel, Shell, SentimentPill } from "@/components/shell";
+import { MetricHelp, Panel, Shell, SentimentPill } from "@/components/shell";
 import { type Retrieved } from "@/lib/enrichment";
 import { useCorpus } from "@/lib/corpus-context";
+import { METRIC_HELP } from "@/lib/metric-help";
 import { askKnowledgeBase } from "@/lib/rag.functions";
 import { ReportExport } from "@/components/report-export";
 import type { ReportSummary } from "@/lib/report";
@@ -136,7 +137,10 @@ function Ask() {
           >
             {loading ? "Synthesising…" : "Retrieve and synthesise"}
           </button>
-          <span className="label-caps">Retrieval k = 6</span>
+          <span className="label-caps flex items-center gap-1.5">
+            Retrieval k = 6
+            <MetricHelp label="Retrieval k" text={METRIC_HELP.retrievalK} />
+          </span>
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
           {SUGGESTIONS.map((s) => (
@@ -199,8 +203,9 @@ function Ask() {
                     <span className="font-mono text-xs text-foreground">
                       [{r.post.id}] {r.post.author}
                     </span>
-                    <span className="font-mono text-[11px] text-muted-foreground">
+                    <span className="flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground">
                       score {r.score.toFixed(3)} · graph +{r.graphBoost.toFixed(3)}
+                      <MetricHelp label="Similarity score" text={METRIC_HELP.similarity} />
                     </span>
                   </div>
                   <p className="mt-1 line-clamp-3 text-sm text-muted-foreground">
