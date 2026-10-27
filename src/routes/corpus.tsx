@@ -136,7 +136,7 @@ function Row({
       <td className="label-caps w-44 py-1.5 pr-3">
         <span className="flex items-center gap-1.5">
           {field}
-          {help ? <MetricHelp label={field} text={help} /> : null}
+          {help ? <MetricHelp label={field} text={help} align="start" /> : null}
         </span>
       </td>
       <td className="py-1.5 text-sm text-foreground">{value}</td>
