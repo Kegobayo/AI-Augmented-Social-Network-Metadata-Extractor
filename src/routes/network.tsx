@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
-import { Panel, Shell, SentimentPill } from "@/components/shell";
+import { MetricHelp, Panel, Shell, SentimentPill } from "@/components/shell";
 import { useCorpus } from "@/lib/corpus-context";
+import { METRIC_HELP } from "@/lib/metric-help";
 
 export const Route = createFileRoute("/network")({
   head: () => ({
@@ -58,7 +59,11 @@ function Network() {
       subtitle="Who influences whom: the follower graph, detected communities, influence ranking and hashtag reach."
     >
       <div className="grid gap-5 lg:grid-cols-[1.1fr_1fr]">
-        <Panel title="Follower graph" hint="Label propagation communities">
+        <Panel
+          title="Follower graph"
+          hint="Label propagation communities"
+          hintHelp={METRIC_HELP.community}
+        >
           <svg viewBox="0 0 520 410" className="w-full">
             {FOLLOW_EDGES.map(([a, b], i) => {
               const from = pos[a];
@@ -121,17 +126,41 @@ function Network() {
           </p>
         </Panel>
 
-        <Panel title="Account register" hint="Node attributes">
+        <Panel
+          title="Account register"
+          hint="Node attributes"
+          hintHelp={METRIC_HELP.graphCentrality}
+        >
           <div className="max-h-[430px] overflow-y-auto">
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-card">
                 <tr className="border-b border-rule text-left">
                   <th className="label-caps pb-2">Account</th>
                   <th className="label-caps pb-2">Type</th>
-                  <th className="label-caps pb-2 text-right">In</th>
-                  <th className="label-caps pb-2 text-right">Out</th>
-                  <th className="label-caps pb-2 text-right">Infl.</th>
-                  <th className="label-caps pb-2 text-right">Sent.</th>
+                  <th className="label-caps pb-2 text-right">
+                    <span className="flex items-center justify-end gap-1.5">
+                      In
+                      <MetricHelp label="In-ties" text={METRIC_HELP.inTies} />
+                    </span>
+                  </th>
+                  <th className="label-caps pb-2 text-right">
+                    <span className="flex items-center justify-end gap-1.5">
+                      Out
+                      <MetricHelp label="Out-ties" text={METRIC_HELP.outTies} />
+                    </span>
+                  </th>
+                  <th className="label-caps pb-2 text-right">
+                    <span className="flex items-center justify-end gap-1.5">
+                      Infl.
+                      <MetricHelp label="Influence" text={METRIC_HELP.influence} />
+                    </span>
+                  </th>
+                  <th className="label-caps pb-2 text-right">
+                    <span className="flex items-center justify-end gap-1.5">
+                      Sent.
+                      <MetricHelp label="Sentiment" text={METRIC_HELP.accountSentiment} />
+                    </span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -166,13 +195,27 @@ function Network() {
       </div>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
-        <Panel title="Hashtag co-occurrence" hint="Weight ≥ 2">
+        <Panel
+          title="Hashtag co-occurrence"
+          hint="Weight ≥ 2"
+          hintHelp={METRIC_HELP.coOccurrences}
+        >
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-rule text-left">
                 <th className="label-caps pb-2">Tag pair</th>
-                <th className="label-caps pb-2 text-right">Co-occurrences</th>
-                <th className="label-caps pb-2">Strength</th>
+                <th className="label-caps pb-2 text-right">
+                  <span className="flex items-center justify-end gap-1.5">
+                    Co-occurrences
+                    <MetricHelp label="Co-occurrences" text={METRIC_HELP.coOccurrences} />
+                  </span>
+                </th>
+                <th className="label-caps pb-2">
+                  <span className="flex items-center gap-1.5">
+                    Strength
+                    <MetricHelp label="Strength" text={METRIC_HELP.strength} />
+                  </span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -194,7 +237,11 @@ function Network() {
           </table>
         </Panel>
 
-        <Panel title="Hashtag reach" hint="Likes + shares per tag">
+        <Panel
+          title="Hashtag reach"
+          hint="Likes + shares per tag"
+          hintHelp={METRIC_HELP.hashtagReach}
+        >
           <div className="space-y-2">
             {HASHTAG_STATS.slice(0, 14).map((h) => (
               <div key={h.tag} className="flex items-center gap-3 text-xs">

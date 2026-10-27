@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
-import { Panel, Shell, SentimentPill } from "@/components/shell";
+import { MetricHelp, Panel, Shell, SentimentPill } from "@/components/shell";
 import { TOPICS, type EnrichedPost } from "@/lib/enrichment";
 import { useCorpus } from "@/lib/corpus-context";
+import { METRIC_HELP } from "@/lib/metric-help";
 
 export const Route = createFileRoute("/corpus")({
   head: () => ({
@@ -121,10 +122,23 @@ function Corpus() {
   );
 }
 
-function Row({ field, value }: { field: string; value: React.ReactNode }) {
+function Row({
+  field,
+  value,
+  help,
+}: {
+  field: string;
+  value: React.ReactNode;
+  help?: string;
+}) {
   return (
     <tr className="border-b border-rule/60 last:border-0 align-top">
-      <td className="label-caps w-44 py-1.5 pr-3">{field}</td>
+      <td className="label-caps w-44 py-1.5 pr-3">
+        <span className="flex items-center gap-1.5">
+          {field}
+          {help ? <MetricHelp label={field} text={help} /> : null}
+        </span>
+      </td>
       <td className="py-1.5 text-sm text-foreground">{value}</td>
     </tr>
   );
@@ -155,11 +169,24 @@ function MetadataRecord({ post }: { post: EnrichedPost }) {
               </span>
             }
           />
-          <Row field="Engagement rate" value={`${post.engagementRate}% of followers`} />
-          <Row field="Save ratio" value={`${post.saveRatio}%`} />
-          <Row field="Amplification" value={`${post.amplification}%`} />
+          <Row
+            field="Engagement rate"
+            value={`${post.engagementRate}% of followers`}
+            help={METRIC_HELP.engagementRate}
+          />
+          <Row
+            field="Save ratio"
+            value={`${post.saveRatio}%`}
+            help={METRIC_HELP.saveRatio}
+          />
+          <Row
+            field="Amplification"
+            value={`${post.amplification}%`}
+            help={METRIC_HELP.amplification}
+          />
           <Row
             field="Topic (modelled)"
+            help={METRIC_HELP.topicConfidence}
             value={
               <>
                 {post.topic.label}{" "}
@@ -171,6 +198,7 @@ function MetadataRecord({ post }: { post: EnrichedPost }) {
           />
           <Row
             field="Sentiment"
+            help={METRIC_HELP.sentiment}
             value={
               <>
                 {post.sentimentLabel} <SentimentPill value={post.sentiment} /> · emotion:{" "}
@@ -180,6 +208,7 @@ function MetadataRecord({ post }: { post: EnrichedPost }) {
           />
           <Row
             field="Named entities"
+            help={METRIC_HELP.namedEntities}
             value={
               <div className="flex flex-wrap gap-1.5">
                 {post.entities.map((e) => (
@@ -208,6 +237,7 @@ function MetadataRecord({ post }: { post: EnrichedPost }) {
           />
           <Row
             field="Vector index"
+            help={METRIC_HELP.vectorIndex}
             value={
               <span className="font-mono text-xs text-muted-foreground">
                 96-dim embedding · [{post.embedding.slice(0, 6).map((v) => v.toFixed(2)).join(", ")} …]
