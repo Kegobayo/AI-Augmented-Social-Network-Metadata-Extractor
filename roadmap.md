@@ -1,2 +1,3 @@
 - [x] Add branded report exports with sentiment trends, top entities, and available AI summaries.
 - [x] Verify actual downloads, PDF layout, and current app errors.
+- [x] Add hover explanations for every metric label and confirm each tooltip renders on all pages.

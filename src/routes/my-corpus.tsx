@@ -2,8 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 
-import { Panel, Shell, SentimentPill, Stat } from "@/components/shell";
+import { MetricHelp, Panel, Shell, SentimentPill, Stat } from "@/components/shell";
 import { useCorpusState } from "@/lib/corpus-context";
+import { METRIC_HELP } from "@/lib/metric-help";
 import { connectInstagram, getConnection, removeSavedPost, syncInstagram, unlinkInstagram } from "@/lib/instagram-graph.functions";
 
 export const Route = createFileRoute("/my-corpus")({
@@ -84,10 +85,22 @@ function MyCorpus() {
   return (
     <Shell title="My corpus" subtitle={`Shared corpus, open to everyone. Saved posts power the dashboard, corpus browser, network map and queries.`}>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat value={saved.length} label="Saved posts" />
-        <Stat value={corpus.isDemo ? 0 : corpus.AUTHORS.length} label="Accounts" />
-        <Stat value={corpus.isDemo ? 0 : corpus.EDGES.length} label="Mention ties" />
-        <Stat value={corpus.isDemo ? 0 : corpus.HASHTAG_STATS.length} label="Hashtags" />
+        <Stat value={saved.length} label="Saved posts" help={METRIC_HELP.posts} />
+        <Stat
+          value={corpus.isDemo ? 0 : corpus.AUTHORS.length}
+          label="Accounts"
+          help={METRIC_HELP.accounts}
+        />
+        <Stat
+          value={corpus.isDemo ? 0 : corpus.EDGES.length}
+          label="Mention ties"
+          help={METRIC_HELP.mentionTies}
+        />
+        <Stat
+          value={corpus.isDemo ? 0 : corpus.HASHTAG_STATS.length}
+          label="Hashtags"
+          help={METRIC_HELP.hashtags}
+        />
       </div>
 
       <Panel className="mt-6" title="Instagram account" hint="Official Instagram API">
@@ -145,20 +158,35 @@ function MyCorpus() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-rule text-left">
-                <th className="label-caps pb-2">Date</th>
-                <th className="label-caps pb-2">Account</th>
-                <th className="label-caps pb-2">Caption</th>
-                <th className="label-caps pb-2 text-right">Likes</th>
-                <th className="label-caps pb-2 text-right">Reach</th>
-                <th className="label-caps pb-2 text-right">Sentiment</th>
+                <th className="label-caps px-2 pb-2">Date</th>
+                <th className="label-caps px-2 pb-2">Account</th>
+                <th className="label-caps px-2 pb-2">Caption</th>
+                <th className="label-caps px-2 pb-2 text-right">
+                  <span className="flex items-center justify-end gap-1.5 whitespace-nowrap">
+                    Likes
+                    <MetricHelp label="Likes" text={METRIC_HELP.interactions} />
+                  </span>
+                </th>
+                <th className="label-caps px-2 pb-2 text-right">
+                  <span className="flex items-center justify-end gap-1.5 whitespace-nowrap">
+                    Reach
+                    <MetricHelp label="Reach" text={METRIC_HELP.reach} />
+                  </span>
+                </th>
+                <th className="label-caps px-2 pb-2 text-right">
+                  <span className="flex items-center justify-end gap-1.5 whitespace-nowrap">
+                    Sentiment
+                    <MetricHelp label="Sentiment" text={METRIC_HELP.sentiment} />
+                  </span>
+                </th>
                 <th />
               </tr>
             </thead>
             <tbody>
               {saved.map((p) => (
                 <tr key={p.id} className="border-b border-rule/60 last:border-0 align-top">
-                  <td className="py-2 font-mono text-xs">{p.posted_at.slice(0, 10)}</td>
-                  <td className="py-2 font-mono text-xs">{p.author}</td>
+                  <td className="py-2 px-2 font-mono text-xs">{p.posted_at.slice(0, 10)}</td>
+                  <td className="py-2 px-2 font-mono text-xs">{p.author}</td>
                   <td className="max-w-md py-2 text-xs text-muted-foreground">
                     {p.permalink ? (
                       <a href={p.permalink} target="_blank" rel="noreferrer" className="hover:text-foreground">
@@ -168,12 +196,12 @@ function MyCorpus() {
                       p.caption.slice(0, 120)
                     )}
                   </td>
-                  <td className="py-2 text-right font-mono text-xs">{p.likes.toLocaleString()}</td>
-                  <td className="py-2 text-right font-mono text-xs">{p.reach?.toLocaleString() ?? "—"}</td>
-                  <td className="py-2 text-right">
+                  <td className="py-2 px-2 text-right font-mono text-xs">{p.likes.toLocaleString()}</td>
+                  <td className="py-2 px-2 text-right font-mono text-xs">{p.reach?.toLocaleString() ?? "—"}</td>
+                  <td className="py-2 px-2 text-right">
                     <SentimentPill value={p.sentiment ?? 0} />
                   </td>
-                  <td className="py-2 text-right">
+                  <td className="py-2 px-2 text-right">
                     <button onClick={() => remove(p.id)} className="text-xs text-negative underline underline-offset-4">
                       Remove
                     </button>

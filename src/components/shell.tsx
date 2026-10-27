@@ -28,6 +28,12 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useCorpusState } from "@/lib/corpus-context";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const NAV = [
   {
@@ -208,14 +214,50 @@ export function Shell({
   );
 }
 
+/** Small "?" marker that explains a metric on hover, focus or tap. */
+export function MetricHelp({
+  label,
+  text,
+  align = "center",
+}: {
+  label: string;
+  text: string;
+  align?: "center" | "start" | "end";
+}) {
+  return (
+    <TooltipProvider delayDuration={120}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            aria-label={`What "${label}" means`}
+            className="inline-flex size-4 shrink-0 cursor-help items-center justify-center rounded-full border border-border bg-secondary text-[10px] font-semibold leading-none text-muted-foreground transition-colors hover:border-ring hover:bg-primary-subtle hover:text-primary focus-visible:border-ring focus-visible:text-primary focus-visible:outline-none"
+          >
+            ?
+          </button>
+        </TooltipTrigger>
+        <TooltipContent
+          side="top"
+          align={align}
+          className="max-w-[18rem] rounded-lg border border-border bg-popover px-3 py-2 text-xs leading-relaxed font-normal text-popover-foreground shadow-lg"
+        >
+          {text}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
 export function Panel({
   title,
   hint,
+  hintHelp,
   children,
   className = "",
 }: {
   title: string;
   hint?: string;
+  hintHelp?: string;
   children: ReactNode;
   className?: string;
 }) {
@@ -223,20 +265,36 @@ export function Panel({
     <section className={`paper-panel p-6 ${className}`}>
       <div className="mb-4 flex items-baseline justify-between gap-3">
         <h3 className="text-base font-semibold text-foreground">{title}</h3>
-        {hint ? <span className="label-caps">{hint}</span> : null}
+        {hint ? (
+          <span className="label-caps flex items-center gap-1.5 whitespace-nowrap">
+            {hint}
+            {hintHelp ? <MetricHelp label={hint} text={hintHelp} /> : null}
+          </span>
+        ) : null}
       </div>
       {children}
     </section>
   );
 }
 
-export function Stat({ value, label }: { value: string | number; label: string }) {
+export function Stat({
+  value,
+  label,
+  help,
+}: {
+  value: string | number;
+  label: string;
+  help?: string;
+}) {
   return (
     <div className="paper-panel px-5 py-4">
       <div className="text-[28px] font-bold leading-8 tracking-tight text-foreground [font-variant-numeric:tabular-nums]">
         {value}
       </div>
-      <div className="label-caps mt-1.5">{label}</div>
+      <div className="label-caps mt-1.5 flex items-center gap-1.5 whitespace-nowrap">
+        {label}
+        {help ? <MetricHelp label={label} text={help} align="start" /> : null}
+      </div>
     </div>
   );
 }
