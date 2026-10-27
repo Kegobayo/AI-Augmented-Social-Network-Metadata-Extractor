@@ -197,15 +197,15 @@ function Dashboard() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-rule text-left">
-                <th className="label-caps pb-2">Account</th>
-                <th className="label-caps pb-2">Community</th>
-                <th className="label-caps pb-2 pl-4 text-right">
+                <th className="label-caps px-2 pb-2">Account</th>
+                <th className="label-caps px-2 pb-2">Community</th>
+                <th className="label-caps px-2 pb-2 text-right">
                   <span className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                     In-ties
                     <MetricHelp label="In-ties" text={METRIC_HELP.inTies} />
                   </span>
                 </th>
-                <th className="label-caps pb-2 pl-4 text-right">
+                <th className="label-caps px-2 pb-2 text-right">
                   <span className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                     Influence
                     <MetricHelp label="Influence" text={METRIC_HELP.influence} />
@@ -216,10 +216,10 @@ function Dashboard() {
             <tbody>
               {influencers.map((a) => (
                 <tr key={a.id} className="border-b border-rule/60 last:border-0">
-                  <td className="py-2 font-mono text-xs text-foreground">{a.id}</td>
-                  <td className="py-2 text-xs text-muted-foreground">{a.community}</td>
-                  <td className="py-2 text-right font-mono text-xs">{a.inDegree}</td>
-                  <td className="py-2 text-right font-mono text-xs font-semibold">
+                  <td className="py-2 px-2 font-mono text-xs text-foreground">{a.id}</td>
+                  <td className="py-2 px-2 text-xs text-muted-foreground">{a.community}</td>
+                  <td className="py-2 px-2 text-right font-mono text-xs">{a.inDegree}</td>
+                  <td className="py-2 px-2 text-right font-mono text-xs font-semibold">
                     {a.influence}
                   </td>
                 </tr>
@@ -277,22 +277,22 @@ function Dashboard() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-rule text-left">
-              <th className="label-caps pb-2">ID</th>
-              <th className="label-caps pb-2">Account</th>
-              <th className="label-caps pb-2">Topic</th>
-              <th className="label-caps pb-2 pl-4 text-right">
+              <th className="label-caps px-2 pb-2">ID</th>
+              <th className="label-caps px-2 pb-2">Account</th>
+              <th className="label-caps px-2 pb-2">Topic</th>
+              <th className="label-caps px-2 pb-2 text-right">
                 <span className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                   Eng. rate
                   <MetricHelp label="Engagement rate" text={METRIC_HELP.engagementRate} />
                 </span>
               </th>
-              <th className="label-caps pb-2 pl-4 text-right">
+              <th className="label-caps px-2 pb-2 text-right">
                 <span className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                   Save ratio
                   <MetricHelp label="Save ratio" text={METRIC_HELP.saveRatio} />
                 </span>
               </th>
-              <th className="label-caps pb-2 pl-4 text-right">
+              <th className="label-caps px-2 pb-2 text-right">
                 <span className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                   Sentiment
                   <MetricHelp label="Sentiment" text={METRIC_HELP.sentiment} />
@@ -303,12 +303,12 @@ function Dashboard() {
           <tbody>
             {topPosts.map((p) => (
               <tr key={p.id} className="border-b border-rule/60 last:border-0">
-                <td className="py-2 font-mono text-xs">{p.id}</td>
-                <td className="py-2 font-mono text-xs">{p.author}</td>
-                <td className="py-2 text-xs text-muted-foreground">{p.topic.label}</td>
-                <td className="py-2 text-right font-mono text-xs">{p.engagementRate}%</td>
-                <td className="py-2 text-right font-mono text-xs">{p.saveRatio}%</td>
-                <td className="py-2 text-right">
+                <td className="py-2 px-2 font-mono text-xs">{p.id}</td>
+                <td className="py-2 px-2 font-mono text-xs">{p.author}</td>
+                <td className="py-2 px-2 text-xs text-muted-foreground">{p.topic.label}</td>
+                <td className="py-2 px-2 text-right font-mono text-xs">{p.engagementRate}%</td>
+                <td className="py-2 px-2 text-right font-mono text-xs">{p.saveRatio}%</td>
+                <td className="py-2 px-2 text-right">
                   <SentimentPill value={p.sentiment} />
                 </td>
               </tr>
