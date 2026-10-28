@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { NetworkGraph } from "@/components/network-graph";
 
 import { MetricHelp, Panel, Shell, SentimentPill } from "@/components/shell";
 import { useCorpus } from "@/lib/corpus-context";
@@ -26,106 +27,20 @@ export const Route = createFileRoute("/network")({
   component: Network,
 });
 
-const COMMUNITY_COLORS: Record<string, string> = {};
-function colorFor(community: string) {
-  if (!COMMUNITY_COLORS[community]) {
-    const palette = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
-    COMMUNITY_COLORS[community] = palette[Object.keys(COMMUNITY_COLORS).length % palette.length]!;
-  }
-  return COMMUNITY_COLORS[community]!;
-}
-
 function Network() {
-  const { AUTHORS, CO_OCCURRENCE, HASHTAG_STATS, EDGES: FOLLOW_EDGES } = useCorpus();
-  const [focus, setFocus] = useState<string | null>(null);
-
-  const layout = useMemo(() => {
-    const r = 175;
-    const cx = 260;
-    const cy = 205;
-    return AUTHORS.map((a, i) => {
-      const angle = (i / AUTHORS.length) * Math.PI * 2 - Math.PI / 2;
-      return { ...a, x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
-    });
-  }, [AUTHORS]);
-
-  const pos = Object.fromEntries(layout.map((n) => [n.id, n]));
-  const maxInfluence = Math.max(...AUTHORS.map((a) => a.influence));
-  const communities = [...new Set(AUTHORS.map((a) => a.community))];
+  const corpus = useCorpus();
+  const { AUTHORS, CO_OCCURRENCE, HASHTAG_STATS } = corpus;
+  const [, setFocus] = useState<string | null>(null);
 
   return (
     <Shell
       title="Network"
       subtitle="Who influences whom: the follower graph, detected communities, influence ranking and hashtag reach."
     >
-      <div className="grid gap-5 lg:grid-cols-[1.1fr_1fr]">
-        <Panel
-          title="Follower graph"
-          hint="Label propagation communities"
-          hintHelp={METRIC_HELP.community}
-        >
-          <svg viewBox="0 0 520 410" className="w-full">
-            {FOLLOW_EDGES.map(([a, b], i) => {
-              const from = pos[a];
-              const to = pos[b];
-              if (!from || !to) return null;
-              const active = !focus || focus === a || focus === b;
-              return (
-                <line
-                  key={i}
-                  x1={from.x}
-                  y1={from.y}
-                  x2={to.x}
-                  y2={to.y}
-                  stroke="var(--rule)"
-                  strokeWidth={active ? 1.4 : 0.6}
-                  opacity={active ? 0.9 : 0.25}
-                />
-              );
-            })}
-            {layout.map((n) => {
-              const active = !focus || focus === n.id;
-              const radius = 8 + (n.influence / maxInfluence) * 13;
-              return (
-                <g
-                  key={n.id}
-                  onMouseEnter={() => setFocus(n.id)}
-                  onMouseLeave={() => setFocus(null)}
-                  className="cursor-pointer"
-                  opacity={active ? 1 : 0.35}
-                >
-                  <circle cx={n.x} cy={n.y} r={radius} fill={colorFor(n.community)} opacity={0.85} />
-                  <text
-                    x={n.x}
-                    y={n.y + radius + 12}
-                    textAnchor="middle"
-                    fontSize="10"
-                    fontFamily="var(--font-mono)"
-                    fill="var(--foreground)"
-                  >
-                    {n.id}
-                  </text>
-                </g>
-              );
-            })}
-          </svg>
-          <div className="mt-2 flex flex-wrap gap-3 text-xs">
-            {communities.map((c) => (
-              <span key={c} className="flex items-center gap-1.5 text-muted-foreground">
-                <span
-                  className="inline-block size-2.5 rounded-full"
-                  style={{ background: colorFor(c) }}
-                />
-                {c}
-              </span>
-            ))}
-          </div>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Node radius encodes influence (in-degree, reach and cumulative engagement). Hover a node
-            to isolate its ties.
-          </p>
-        </Panel>
-
+      <Panel title="Interactive network graph" hint="Click a node" hintHelp={METRIC_HELP.community} className="mb-5">
+        <NetworkGraph corpus={corpus} />
+      </Panel>
+      <div className="grid gap-5">
         <Panel
           title="Account register"
           hint="Node attributes"
