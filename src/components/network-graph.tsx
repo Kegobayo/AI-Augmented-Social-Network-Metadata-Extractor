@@ -29,13 +29,13 @@ export function NetworkGraph({ corpus }: { corpus: Corpus }) {
     const ns: N[] = AUTHORS.map((a, i) => {
       const ang = i * 2.39996;
       const rad = 12 * Math.sqrt(i + 1);
-      return { id: a.id, community: a.community, r: 7 + (a.influence / max) * 14, x: W / 2 + rad * Math.cos(ang), y: H / 2 + rad * Math.sin(ang) };
+      return { id: a.id, community: a.community, r: 10 + (a.influence / max) * 16, x: W / 2 + rad * Math.cos(ang), y: H / 2 + rad * Math.sin(ang) };
     });
     const ids = new Set(ns.map((n) => n.id));
     const links = EDGES.filter(([a, b]) => ids.has(a) && ids.has(b)).map(([source, target]) => ({ source, target }));
     const sim = forceSimulation(ns)
-      .force("link", forceLink<N, { source: string; target: string }>(links).id((d) => d.id).distance(80))
-      .force("charge", forceManyBody().strength(-220))
+      .force("link", forceLink<N, { source: string; target: string }>(links).id((d) => d.id).distance(140))
+      .force("charge", forceManyBody().strength(-600))
       .force("center", forceCenter(W / 2, H / 2))
       .force("collide", forceCollide<N>().radius((d) => d.r + 14))
       .stop();
@@ -129,7 +129,7 @@ export function NetworkGraph({ corpus }: { corpus: Corpus }) {
                   onClick={(e) => { e.stopPropagation(); setSelected(n.id === selected ? null : n.id); }}>
                   <circle cx={n.x} cy={n.y} r={n.r} fill={color(n.community)}
                     stroke={n.id === selected ? "var(--foreground)" : "var(--card)"} strokeWidth={n.id === selected ? 3 : 1.5} />
-                  <text x={n.x} y={n.y! + n.r + 11} textAnchor="middle" fontSize="10" fontFamily="var(--font-mono)" fill="var(--foreground)">{n.id}</text>
+                  <text x={n.x} y={n.y! + n.r + 11} textAnchor="middle" fontSize="11" fontFamily="var(--font-mono)" fill="var(--foreground)" pointerEvents="none">{n.id}</text>
                 </g>
               );
             })}
