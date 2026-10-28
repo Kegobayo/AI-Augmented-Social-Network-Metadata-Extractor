@@ -126,6 +126,32 @@ export function CorpusProvider({ children }: { children: ReactNode }) {
     void refresh();
   }, [refresh]);
 
+  // Live ingestion stream: merge each new/changed/removed post into state so
+  // charts recompute from the delta instead of re-fetching the whole corpus.
+  useEffect(() => {
+    const channel = supabase
+      .channel("saved_posts_stream")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "saved_posts", filter: "user_id=eq.00000000-0000-0000-0000-000000000000" },
+        (payload) => {
+          setSaved((prev) => {
+            if (payload.eventType === "DELETE") {
+              const id = (payload.old as Partial<SavedRow>).id;
+              return prev.filter((r) => r.id !== id);
+            }
+            const row = payload.new as SavedRow;
+            const rest = prev.filter((r) => r.id !== row.id);
+            return [row, ...rest].sort((a, b) => b.posted_at.localeCompare(a.posted_at));
+          });
+        },
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, []);
+
   const rangedSaved = useMemo(() => withinDays(saved, days, (r) => r.posted_at), [saved, days]);
   const rangedRaw = useMemo(() => withinDays(RAW_POSTS, days, (p) => p.timestamp), [days]);
 
