@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, type SimulationNodeDatum } from "d3-force";
+import { forceX, forceY, forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, type SimulationNodeDatum } from "d3-force";
 import { select } from "d3-selection";
 import { zoom, zoomIdentity, type ZoomBehavior } from "d3-zoom";
 import { Minus, Plus, RotateCcw, X } from "lucide-react";
@@ -35,8 +35,10 @@ export function NetworkGraph({ corpus }: { corpus: Corpus }) {
     const links = EDGES.filter(([a, b]) => ids.has(a) && ids.has(b)).map(([source, target]) => ({ source, target }));
     const sim = forceSimulation(ns)
       .force("link", forceLink<N, { source: string; target: string }>(links).id((d) => d.id).distance(140))
-      .force("charge", forceManyBody().strength(-600))
+      .force("charge", forceManyBody().strength(-320))
       .force("center", forceCenter(W / 2, H / 2))
+      .force("x", forceX(W / 2).strength(0.12))
+      .force("y", forceY(H / 2).strength(0.16))
       .force("collide", forceCollide<N>().radius((d) => d.r + 14))
       .stop();
     for (let i = 0; i < 300; i++) sim.tick();
@@ -91,7 +93,7 @@ export function NetworkGraph({ corpus }: { corpus: Corpus }) {
 
   return (
     <div className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
-      <div className="relative overflow-hidden rounded-xl border border-border bg-background">
+      <div className="relative self-start overflow-hidden rounded-xl border border-border bg-background">
         <div className="absolute right-2 top-2 z-10 flex gap-1">
           {[
             { icon: Plus, label: "Zoom in", on: () => zoomBy(1.3) },
