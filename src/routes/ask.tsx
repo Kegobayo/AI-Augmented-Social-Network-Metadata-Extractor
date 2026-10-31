@@ -38,6 +38,18 @@ const SUGGESTIONS = [
   "What does the corpus suggest about the link between energy access and health outcomes?",
 ];
 
+/** Hide internal imported-post identifiers only in the displayed text. */
+function displayText(text: string) {
+  return text
+    .replace(/\[([^\]]*\burl_[^\]]*)\]/g, (_match, contents: string) => {
+      const visible = contents.split(/[,;\s]+/).filter((id) => id && !/^url_/i.test(id));
+      return visible.length ? `[${visible.join(", ")}]` : "";
+    })
+    .replace(/\burl_[\w-]*/gi, "")
+    .replace(/[^\S\n]+([.,;:!?])/g, "$1")
+    .replace(/[^\S\n]{2,}/g, " ");
+}
+
 /** Render inline markdown (bold, italic) so model emphasis marks never show as literal asterisks. */
 function renderInline(text: string, prefix = "") {
   const boldParts = text.split(/(\*\*[^*]+\*\*)/g);
@@ -160,7 +172,7 @@ function Ask() {
       </form>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[1.25fr_1fr]">
-        <Panel title="Synthesised knowledge" hint="AI answer">
+        <Panel title="Synthesised knowledge">
           {error && <p className="text-sm text-negative">{error}</p>}
           {loading && !answer && (
             <p className="text-sm text-muted-foreground">
@@ -175,7 +187,7 @@ function Ask() {
           )}
           {answer && (
             <div className="space-y-3 text-sm leading-relaxed text-foreground">
-              {answer.split("\n").filter(Boolean).map((line, i) =>
+              {displayText(answer).split("\n").filter((line) => line.trim()).map((line, i) =>
                 line.startsWith("##") ? (
                   <h4 key={i} className="pt-2 text-base font-semibold">
                     {line.replace(/^#+\s*/, "")}
@@ -201,7 +213,7 @@ function Ask() {
                 <li key={r.post.id} className="border-b border-rule/60 pb-3 last:border-0">
                   <div className="flex items-baseline justify-between gap-2">
                     <span className="font-mono text-xs text-foreground">
-                      [{r.post.id}] {r.post.author}
+                      {displayText(`[${r.post.id}] ${r.post.author}`).trim()}
                     </span>
                     <span className="flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground">
                       score {r.score.toFixed(3)} · graph +{r.graphBoost.toFixed(3)}
@@ -209,7 +221,7 @@ function Ask() {
                     </span>
                   </div>
                   <p className="mt-1 line-clamp-3 text-sm text-muted-foreground">
-                    {r.post.caption}
+                    {displayText(r.post.caption)}
                   </p>
                   <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
                     <span>{r.post.topic.label}</span>
